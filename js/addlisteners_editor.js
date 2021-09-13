@@ -8,6 +8,12 @@ for (var i=0;i<10;i++) {
 //var soundButtonPress = document.getElementById("soundButtonPress");
 //soundButtonPress.addEventListener("click", buttonPress, false);
 
+var solveClickLink = document.getElementById("solveClickLink");
+solveClickLink.addEventListener("click", solveClick, false);
+
+var cancelClickLink = document.getElementById("cancelClickLink");
+cancelClickLink.addEventListener("click", cancelClick, false);
+
 var runClickLink = document.getElementById("runClickLink");
 runClickLink.addEventListener("click", runClick, false);
 
@@ -62,4 +68,3 @@ var gestureHandler = Mobile.enable();
 if (gestureHandler) {
     gestureHandler.setFocusElement(document.getElementById('gameCanvas'));
 }
-

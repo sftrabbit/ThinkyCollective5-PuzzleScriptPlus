@@ -1,11 +1,13 @@
-'use strict';
 
+'use strict';
 
 function isColor(str) {
 	str = str.trim();
 	if (str in colorPalettes.arnecolors)
 		return true;
-	if (/^#([0-9A-F]{3}){1,2}$/i.test(str))
+	if (/^#([0-9A-F]{2}){3,4}$/i.test(str))
+		return true;
+	if (/^#([0-9A-F]{3})$/i.test(str))
 		return true;
 	if (str === "transparent")
 		return true;
@@ -139,12 +141,51 @@ function generateExtraMembers(state) {
 	      	if (o.colors.length==0) {
 	      		logError('color not specified for object "' + n +'".',o.lineNumber);
 	      		o.colors=["#ff00ff"];
-	      	}
-			if (o.spritematrix.length===0) {
-				o.spritematrix = [[0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0]];
+			  }
+			 if (o.cloneSprite !== "") {
+				//console.log("To clone: "+o.cloneSprite);
+				if (state.objects.hasOwnProperty(o.cloneSprite)) {
+					
+					if (state.objects[o.cloneSprite].cloneSprite === "") {
+						o.spritematrix = deepClone(state.objects[o.cloneSprite].spritematrix);
+						//console.log(o.spritematrix);
+					} else {
+						logError("The sprite that "+n+" attempted to clone ("+o.cloneSprite+") clones a sprite itself ("+state.objects[o.cloneSprite].cloneSprite + "), so it can't clone the sprite! You'll need to set up the cloning differently.",o.lineNumber);
+					}
+				} else {
+					logError(n +" attempted to clone the sprite matrix of "+o.cloneSprite+", but that object doesn't exist?!",o.lineNumber);
+				}
+			 } 
+			  /*else /*if (o.colors[o.colors.length-1][0] !== "#") {
+				  var objectToClone = o.colors[o.colors.length-1];
+				  if (state.objects.hasOwnProperty(objectToClone)) {
+					o.spritematrix = objectToClone.spritematrix;
+					o.spritematrix = generateSpriteMatrix(o.spritematrix);
+					logWarning("Cloned "+objectToClone, o.lineNumber);
+					continue;
+				} else {
+					logError("Attempted to clone the sprite matrix of "+objectToClone+", but that object doesn't exist?!")
+				}
+			}*/
+			else if (o.spritematrix.length===0) {
+				o.spritematrix = new Array(state.sprite_size);
+				var zeros = new Array(state.sprite_size);
+				for(var i = 0; i < state.sprite_size; i++) {
+					zeros[i] = 0;
+				}
+				for(var i = 0; i < state.sprite_size; i++) {
+					o.spritematrix[i] = zeros;
+				}
 			} else {
-				if ( o.spritematrix.length!==5 || o.spritematrix[0].length!==5 || o.spritematrix[1].length!==5 || o.spritematrix[2].length!==5 || o.spritematrix[3].length!==5 || o.spritematrix[4].length!==5 ){
-					logWarning("Sprite graphics must be 5 wide and 5 high exactly.",o.lineNumber);
+				if ( o.spritematrix.length!==state.sprite_size) {
+					logWarning("Sprite graphics must be " + state.sprite_size + " wide and " + state.sprite_size + " high exactly.",o.lineNumber);
+				} else {
+					for(var i = 0; i < state.sprite_size; i++) {
+						if(o.spritematrix[i].length!==state.sprite_size) {
+							logWarning("Sprite graphics must be " + state.sprite_size + " wide and " + state.sprite_size + " high exactly.",o.lineNumber);
+							break;
+						}
+					}
 				}
 				o.spritematrix = generateSpriteMatrix(o.spritematrix);
 			}
@@ -383,6 +424,48 @@ function generateExtraMembers(state) {
 	state.backgroundlayer=backgroundlayer;
 }
 
+function generateExtraMembersPart2(state) {
+	function assignMouseObject(preludeTerm, defaultName) {
+		if (preludeTerm in state.metadata) {
+			var name = state.metadata[preludeTerm] || defaultName;
+			var id = null;
+			if (state.objects[name]) {
+				id = state.objects[name].id;
+			} else {
+				if (name in state.synonymsDict) {
+					var n = state.synonymsDict[name];
+					var o = state.objects[n];
+					id = o.id;
+				} else {
+					var o=state.objects[state.idDict[1]];
+					id=o.id;
+					logError(name + " object/alias has to be defined");
+				}
+			}
+			return id;
+		}
+	}
+	
+	state.lmbID = assignMouseObject("mouse_left", "lmb");
+	state.rmbID = assignMouseObject("mouse_right", "rmb");
+	state.dragID = assignMouseObject("mouse_drag", "drag");
+	state.rdragID = assignMouseObject("mouse_rdrag", "rdrag");
+	state.lmbupID = assignMouseObject("mouse_up", "lmbup");
+	state.rmbupID = assignMouseObject("mouse_rup", "rmbup");
+	
+	if ("mouse_obstacle" in state.metadata) {
+		var name = state.metadata["mouse_obstacle"];
+		
+		if (name) {
+			state.obstacleMask = state.objectMasks[name];
+			if (!state.obstacleMask) {
+				logError(name + " object/alias has to be defined.");
+				state.obstacleMask = state.objectMasks["background"];
+			}
+		}
+	}
+}
+
 Level.prototype.calcBackgroundMask = function(state) {
 	if (state.backgroundlayer===undefined) {
 			logError("you have to have a background layer");
@@ -405,14 +488,14 @@ function levelFromString(state,level) {
 	var backgroundlayer=state.backgroundlayer;
 	var backgroundid=state.backgroundid;
 	var backgroundLayerMask = state.layerMasks[backgroundlayer];
-	var o = new Level(level[0], level[1].length, level.length-1, state.collisionLayers.length, null);
+	var o = new Level(level[0], level[2].length, level.length-2, state.collisionLayers.length, null, level[1]);
 	o.objects = new Int32Array(o.width * o.height * STRIDE_OBJ);
 
 	for (var i = 0; i < o.width; i++) {
 		for (var j = 0; j < o.height; j++) {
-			var ch = level[j+1].charAt(i);
+			var ch = level[j+2].charAt(i);
 			if (ch.length==0) {
-				ch=level[j+1].charAt(level[j+1].length-1);
+				ch=level[j+2].charAt(level[j+2].length-1);
 			}
 			var mask = state.glyphDict[ch];
 
@@ -453,31 +536,119 @@ function levelFromString(state,level) {
 function levelsToArray(state) {
 	var levels = state.levels;
 	var processedLevels = [];
+	var sectionTerminated = false;
+	var previousSection = null;
 
 	for (var levelIndex = 0; levelIndex < levels.length; levelIndex++) {
 		var level = levels[levelIndex];
 		if (level.length == 0) {
 			continue;
 		}
-		if (level[0] == '\n') {
-
-			var o = {
-				message: level[1]
+		
+		var o;
+		if (level[0] == 'message') {
+			o = {
+				message: level[1],
+				section: level[3]
 			};
 			splitMessage = wordwrap(o.message,intro_template[0].length);
 			if (splitMessage.length>12){
 				logWarning('Message too long to fit on screen.', level[2]);
 			}
-
-			processedLevels.push(o);
+			if(o.section != previousSection) {sectionTerminated = false; previousSection = o.section;}
+			if(sectionTerminated) logWarning('Message unreachable due to previous GOTO.', level[2]);
+		} else if (level[0] == 'goto') {
+			o = {
+				target: level[1],
+				lineNumber: level[2],
+				section: level[3]
+			};
+			if(o.section != previousSection) {sectionTerminated = false; previousSection = o.section;}
+			if(sectionTerminated) logWarning('GOTO unreachable due to previous GOTO.', o.lineNumber);
+			sectionTerminated = true;
 		} else {
-			var o = levelFromString(state,level);
-			processedLevels.push(o);
+			o = levelFromString(state,level);
+			if(o.section != previousSection) {sectionTerminated = false; previousSection = o.section;}
+			if(sectionTerminated) logWarning('Level unreachable due to previous GOTO.', o.lineNumber);
 		}
-
+		processedLevels.push(o);
 	}
 
 	state.levels = processedLevels;
+}
+
+function extractSections(state) {
+	var sections = [];
+
+	var lastSection = null;
+
+	for(var i = 0; i < state.levels.length; i++) {
+		var level = state.levels[i];
+		
+		if(level.section != lastSection) {
+			var o = {
+				name: level.section,
+				firstLevel: i
+			};
+			if(o.name == "__WIN__") {
+				state.winSection = o;
+			} else {
+				sections.push(o);
+			}
+			
+			lastSection = level.section;
+		}
+	}
+
+	state.sections = sections;
+}
+
+function convertSectionNamesToIndices(state) {
+	var sectionMap = {};
+	var duplicateSections = {};
+	for (var s = 0; s < state.sections.length; s++) {
+		var sectionName = state.sections[s].name.toLowerCase();
+		if(sectionMap[sectionName] === undefined){
+			sectionMap[sectionName] = s;
+		}else{
+			duplicateSections[sectionName] = true;
+		}
+	}
+	
+	// GOTO commands in the RULES
+	for (var r = 0; r < state.rules.length; r++) {
+		var rule = state.rules[r];
+		for (var c = 0; c < rule.commands.length; c++) {
+			var command = rule.commands[c];
+			if (command[0] != 'goto') continue;
+			var sectionName = command[1].toLowerCase();
+			var sectionIndex = sectionMap[sectionName];
+			if (sectionIndex === undefined){
+				logError('Invalid GOTO command - There is no section named "'+command[1]+'". Either it does not exist, or it has zero levels.', rule.lineNumber);
+				sectionIndex = -1;
+			}else if (duplicateSections[sectionName] !== undefined){
+				logError('Invalid GOTO command - There are multiple sections named "'+command[1]+'". Section names must be unique for GOTO to work.', rule.lineNumber);
+				sectionIndex = -1;
+			}
+			command[1] = sectionIndex;
+		}
+	}
+	
+	// GOTO commands in the LEVELS
+	for (var i = 0; i < state.levels.length; i++) {
+		var level = state.levels[i];
+		if (level.target === undefined) continue; // This was a level or a message, but not a goto.
+		var targetName = level.target.toLowerCase();
+		var targetIndex = sectionMap[targetName];
+		if (targetIndex === undefined){
+			logError('Invalid GOTO command - There is no section named "'+command[1]+'".', level.lineNumber);
+			targetIndex = 0;
+		}else if (duplicateSections[targetName] !== undefined){
+			logError('Invalid GOTO command - There are multiple sections named "'+command[1]+'".', level.lineNumber);
+			targetIndex = 0;
+		}
+		level.target = targetIndex;
+	}
 }
 
 var directionaggregates = {
@@ -492,11 +663,10 @@ var directionaggregates = {
 var relativeDirections = ['^', 'v', '<', '>','horizontal','vertical'];
 var simpleAbsoluteDirections = ['up', 'down', 'left', 'right'];
 var simpleRelativeDirections = ['^', 'v', '<', '>'];
-var reg_directions_only = /^(\>|\<|\^|v|up|down|left|right|moving|stationary|no|randomdir|random|horizontal|vertical|orthogonal|perpendicular|parallel|action)$/;
+var reg_directions_only = /^(\>|\<|\^|v|up|down|left|right|moving|stationary|no|randomdir|random|horizontal|vertical|orthogonal|perpendicular|parallel|action)$/i;
 //redeclaring here, i don't know why
-var commandwords = ["sfx0","sfx1","sfx2","sfx3","sfx4","sfx5","sfx6","sfx7","sfx8","sfx9","sfx10","cancel","checkpoint","restart","win","message","again"];
-
-
+var commandwords = ["sfx0","sfx1","sfx2","sfx3","sfx4","sfx5","sfx6","sfx7","sfx8","sfx9","sfx10","cancel","checkpoint","restart","win","message","again","undo",
+  "nosave","quit","zoomscreen","flickscreen","smoothscreen","again_interval","realtime_interval","key_repeat_interval",'noundo','norestart','background_color','text_color','goto'];
 function directionalRule(rule) {
 	for (var i=0;i<rule.lhs.length;i++) {
 		var cellRow = rule.lhs[i];
@@ -533,7 +703,7 @@ function findIndexAfterToken(str,tokens,tokenIndex){
 	str=str.toLowerCase();
 	var curIndex=0;
 	for (var i=0;i<=tokenIndex;i++){
-		var token = tokens[i];
+		var token = tokens[i].toLowerCase();
 		curIndex=str.indexOf(token,curIndex)+token.length;
 	}
 	return curIndex;
@@ -542,12 +712,10 @@ function findIndexAfterToken(str,tokens,tokenIndex){
 function processRuleString(rule, state, curRules) 
 {
 /*
-
 	intermediate structure
 		dirs: Directions[]
 		pre : CellMask[]
 		post : CellMask[]
-
 		//pre/post pairs must have same lengths
 	final rule structure
 		dir: Direction
@@ -596,6 +764,7 @@ function processRuleString(rule, state, curRules)
 	var groupNumber=lineNumber;
 	var commands=[];
 	var randomRule=false;
+	var globalRule=false;
 
 	if (tokens.length===1) {
 		if (tokens[0]==="startloop" ) {
@@ -643,7 +812,9 @@ function processRuleString(rule, state, curRules)
 					rigid=true;
 				} else if (token==='random') {
 					randomRule=true;
-				} else if (simpleAbsoluteDirections.indexOf(token) >= 0) {
+				} else if (token==='global') {
+					globalRule=true;
+				}else if (simpleAbsoluteDirections.indexOf(token) >= 0) {
 					directions.push(token);
 				} else if (simpleRelativeDirections.indexOf(token) >= 0) {
 					logError('You cannot use relative directions (\"^v<>\") to indicate in which direction(s) a rule applies.  Use absolute directions indicators (Up, Down, Left, Right, Horizontal, or Vertical, for instance), or, if you want the rule to apply in all four directions, do not specify directions', lineNumber);
@@ -736,21 +907,43 @@ function processRuleString(rule, state, curRules)
  						curcell.push(token);
  						curcell.push(token);
  					}
-				} else if (commandwords.indexOf(token)>=0) {
+				} else if (commandwords.indexOf(token.toLowerCase())>=0) {
 					if (rhs===false) {
 						logError("Commands cannot appear on the left-hand side of the arrow.",lineNumber);
 					}
-					if (token==='message') {
+					if (token.toLowerCase()==='message') {
 						var messageIndex = findIndexAfterToken(origLine,tokens,i);
 						var messageStr = origLine.substring(messageIndex).trim();
 						if (messageStr===""){
 							messageStr=" ";
 							//needs to be nonempty or the system gets confused and thinks it's a whole level message rather than an interstitial.
 						}
-						commands.push([token, messageStr]);
+						commands.push([token.toLowerCase(), messageStr]);
 						i=tokens.length;
-					} else {
-						commands.push([token]);
+					}else if (token.toLowerCase()==='goto') {
+						var messageIndex = findIndexAfterToken(origLine,tokens,i);
+						var messageStr = origLine.substring(messageIndex).trim();
+						if (messageStr===""){
+							messageStr=" ";
+							//needs to be nonempty or the system gets confused and thinks it's a whole level message rather than an interstitial.
+						}
+						commands.push([token.toLowerCase(), messageStr]);
+						i=tokens.length;
+					} else if (twiddleable_params.includes(token.toLowerCase())) {
+						if (!state.metadata.includes("runtime_metadata_twiddling")) {
+							logError("You can only change a flag at runtime if you have the 'runtime_metadata_twiddling' prelude flag defined!",lineNumber)
+						} else {
+							var messageIndex = findIndexAfterToken(origLine,tokens,i);
+							var messageStr = origLine.substring(messageIndex).trim();
+							if (messageStr===""){
+								messageStr=" ";
+								//needs to be nonempty or the system gets confused and thinks it's a whole level message rather than an interstitial.
+							}
+							commands.push([token.toLowerCase(), messageStr]);
+						}
+						i=tokens.length;
+					}  else {
+						commands.push([token.toLowerCase()]);
 					}
 				} else {
 					logError('Error, malformed cell rule - was looking for cell contents, but found "' + token + '".  What am I supposed to do with this, eh, please tell me that.', lineNumber);
@@ -790,7 +983,8 @@ function processRuleString(rule, state, curRules)
 		rigid: rigid,
 		groupNumber: groupNumber,
 		commands: commands,
-		randomRule: randomRule
+		randomRule: randomRule,
+		globalRule: globalRule
 	};
 
 	if (directionalRule(rule_line)===false) {
@@ -817,7 +1011,8 @@ function deepCloneRule(rule) {
 		rigid: rule.rigid,
 		groupNumber: rule.groupNumber,
 		commands:rule.commands,
-		randomRule:rule.randomRule
+		randomRule:rule.randomRule,
+		globalRule:rule.globalRule
 	};
 	return clonedRule;
 }
@@ -1389,7 +1584,6 @@ function absolutifyRuleCell(forward, cell) {
 	LEFT parseInt('0', 2);
 	RIGHT parseInt('0', 2);
 	?  parseInt('', 2);
-
 */
 
 var dirMasks = {
@@ -1407,7 +1601,6 @@ var dirMasks = {
 
 function rulesToMask(state) {
 	/*
-
 	*/
 	var layerCount = state.collisionLayers.length;
 	var layerTemplate = [];
@@ -1687,8 +1880,9 @@ function collapseRules(groups) {
 			newrule.push(oldrule.groupNumber);
 			newrule.push(oldrule.rigid);
 			newrule.push(oldrule.commands);
-			newrule.push(oldrule.randomRule);
+			newrule.push(oldrule.randomRule);			
 			newrule.push(cellRowMasks(newrule));
+			newrule.push(oldrule.globalRule);
 			rules[i] = new Rule(newrule);
 		}
 	}
@@ -1805,6 +1999,7 @@ function checkNoLateRulesHaveMoves(state){
 	}
 }
 
+
 function generateRigidGroupList(state) {
 	var rigidGroupIndex_to_GroupIndex=[];
 	var groupIndex_to_RigidGroupIndex=[];
@@ -1830,8 +2025,8 @@ function generateRigidGroupList(state) {
 			rigidGroupIndex_to_GroupIndex.push(i);
 		}
 	}
-	if (rigidGroupIndex_to_GroupIndex.length>30) {
-		logError("There can't be more than 30 rigid groups (rule groups containing rigid members).",rules[0][0][3]);
+	if (rigidGroupIndex_to_GroupIndex.length>60) {
+		logError("There can't be more than 60 rigid groups (rule groups containing rigid members).",rules[0][0][3]);
 	}
 
 	state.rigidGroups=rigidGroups;
@@ -1871,7 +2066,7 @@ function getMaskFromName(state,name) {
 		objectMask.ibitset(o.id);
 	}
 
-	if (objectMask.iszero()) {
+	if (!state.metadata.includes("nokeyboard") && objectMask.iszero()) {
 		logErrorNoLine("error, didn't find any object called player, either in the objects section, or the legends section. there must be a player!");
 	}
 	return objectMask;
@@ -1960,12 +2155,18 @@ function checkObjectsAreLayered(state) {
 	}
 }
 
-function twiddleMetaData(state) {
-	var newmetadata = {};
-	for (var i=0;i<state.metadata.length;i+=2) {
-		var key = state.metadata[i];
-		var val = state.metadata[i+1];
-		newmetadata[key]=val;
+function twiddleMetaData(state, update = false) {
+	var newmetadata;
+
+	if (!update) {
+		newmetadata = {};
+		for (var i=0;i<state.metadata.length;i+=2) {
+			var key = state.metadata[i];
+			var val = state.metadata[i+1];
+			newmetadata[key]=val;
+		}
+	} else {
+		newmetadata = state.metadata;
 	}
 
 	if (newmetadata.flickscreen!==undefined) {
@@ -1980,8 +2181,80 @@ function twiddleMetaData(state) {
 		var intcoords = [parseInt(coords[0]),parseInt(coords[1])];
 		newmetadata.zoomscreen=intcoords;
 	}
+	if (newmetadata.smoothscreen!==undefined) {
+		var val = newmetadata.smoothscreen;
+		var args = val.split(/\s+/);
 
-	state.metadata=newmetadata;	
+		var validArguments = true
+
+		if (args.length < 1) {
+			logErrorNoLine('smoothscreen given no arguments but expects at least 1: smoothscreen [flick] WxH [IxJ] [S]')
+			validArguments = false
+		} else if (args.length > 4) {
+			logErrorNoLine('smoothscreen given ' + args.length + ' arguments but expects at most 4: smoothscreen [flick] WxH [IxJ] [S]')
+			validArguments = false
+		}
+
+		const smoothscreen = {
+			screenSize: { width: 0, height: 0 },
+			boundarySize: { width: 1, height: 1 },
+			cameraSpeed: 0.125,
+			flick: false,
+			debug: !!newmetadata.smoothscreen_debug
+		}
+
+		if (args[0] === 'flick') {
+			smoothscreen.flick = true
+			args.shift()
+		}
+
+		const screenSizeMatch = args[0].match(/^(?<width>\d+)x(?<height>\d+)$/)
+		if (screenSizeMatch) {
+			smoothscreen.screenSize.width = parseInt(screenSizeMatch.groups.width)
+			smoothscreen.screenSize.height = parseInt(screenSizeMatch.groups.height)
+
+			if (smoothscreen.flick) {
+				smoothscreen.boundarySize.width = smoothscreen.screenSize.width
+				smoothscreen.boundarySize.height = smoothscreen.screenSize.height
+			}
+		} else {
+			logErrorNoLine('smoothscreen given first argument ' + args[0] + ' but must be formatted WxH where W and H are integers')
+			validArguments = false
+		}
+
+		if (args.length > 1) {
+			const boundarySizeMatch = args[1].match(/^(?<width>\d+)x(?<height>\d+)$/)
+			if (boundarySizeMatch) {
+				smoothscreen.boundarySize.width = parseInt(boundarySizeMatch.groups.width)
+				smoothscreen.boundarySize.height = parseInt(boundarySizeMatch.groups.height)
+			} else {
+				logErrorNoLine('smoothscreen given second argument ' + args[1] + ' but must be formatted IxJ where I and J are integers')
+				validArguments = false
+			}
+		}
+
+		if (args.length > 2) {
+			const cameraSpeedMatch = args[2].match(/^(?<speed>\d+(\.\d+)?)$/)
+			if (cameraSpeedMatch) {
+				smoothscreen.cameraSpeed = parseFloat(cameraSpeedMatch.groups.speed)
+			} else {
+				logErrorNoLine('smoothscreen given third argument ' + args[2] + ' but must be a number')
+				validArguments = false
+			}
+		}
+
+		if (validArguments) {
+			newmetadata.smoothscreen = smoothscreen;
+		} else {
+			delete newmetadata.smoothscreen
+		}
+	}
+
+	state.metadata=newmetadata;
+
+	if (!update) {
+		state.default_metadata = deepClone(newmetadata);
+	}
 }
 
 function processWinConditions(state) {
@@ -1993,7 +2266,7 @@ function processWinConditions(state) {
 			return;
 		}
 		var num=0;
-		switch(wincondition[0]) {
+		switch(wincondition[0].toLowerCase()) {
 			case 'no':{num=-1;break;}
 			case 'all':{num=1;break;}
 		}
@@ -2054,6 +2327,9 @@ function printRule(rule) {
 	}
 	if (rule.randomRule) {
 		result = "RANDOM "+result+" ";
+	}
+	if (rule.globalRule) {
+		result = "GLOBAL "+result+" ";
 	}
 	if (rule.late) {
 		result = "LATE "+result+" ";
@@ -2478,9 +2754,11 @@ function loadFile(str) {
 	generateExtraMembers(state);
 	generateMasks(state);
 	levelsToArray(state);
+	extractSections(state);
 	rulesToArray(state);
 
 	removeDuplicateRules(state);
+	convertSectionNamesToIndices(state);
 
 	rulesToMask(state);
 
@@ -2501,6 +2779,8 @@ function loadFile(str) {
 	checkObjectsAreLayered(state);
 
 	twiddleMetaData(state);
+	
+	generateExtraMembersPart2(state);
 
 	generateLoopPoints(state);
 

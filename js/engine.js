@@ -1,168 +1,171 @@
-/*
-..................................
-.............SOKOBAN..............
-..................................
-...........#.new game.#...........
-..................................
-.............continue.............
-..................................
-arrow keys to move................
-x to action.......................
-z to undo, r to restart...........
-*/
-
 
 var RandomGen = new RNG();
 
 var intro_template = [
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"............Puzzle Script Terminal............",
-	"....................v 1.7.....................",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"...............insert cartridge...............",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	".............................................."
+  "..................................",
+  "..................................",
+  "..................................",
+  "......Puzzle Script Terminal......",
+  "..............v 1.7+..............",
+  "..................................",
+  "..................................",
+  "..................................",
+  ".........insert cartridge.........",
+  "................................. ",
+  "................................  ",
+  "...............................   ",
+  "..............................    "
 ];
 
 var messagecontainer_template = [
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"................X to continue.................",
-	"..............................................",
-	".............................................."
+  "..................................",
+  "..................................",
+  "..................................",
+  "..................................",
+  "..................................",
+  "..................................",
+  "..................................",
+  "..................................",
+  "..................................",
+  "..................................",
+  "..........X to continue...........",
+  "..................................",
+  ".................................."
+];
+
+var messagecontainer_template_mouse = [
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"........Click to continue.........",
+	"..................................",
+	".................................."
 ];
 
 var titletemplate_firstgo = [
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"................#.start game.#................",
-	"..............................................",
-	"..............................................",
-	".......arrow keys to move.....................",
-	".......X to action............................",
-	".......Z to undo, R to restart................",
-	".............................................."];
-
-var titletemplate_select0 = [
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	".................#.new game.#.................",
-	"..............................................",
-	"...................continue...................",
-	"..............................................",
-	".......arrow keys to move.....................",
-	".......X to action............................",
-	".......Z to undo, R to restart................",
-	".............................................."];
-
-var titletemplate_select1 = [
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"...................new game...................",
-	"..............................................",
-	".................#.continue.#.................",
-	"..............................................",
-	".......arrow keys to move.....................",
-	".......X to action............................",
-	".......Z to undo, R to restart................",
-	".............................................."];
-
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..........#.start game.#..........",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	".................................."];
 
 var titletemplate_firstgo_selected = [
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"#################.start game.#################",
-	"..............................................",
-	"..............................................",
-	".......arrow keys to move.....................",
-	".......X to action............................",
-	".......Z to undo, R to restart................",
-	".............................................."];
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"###########.start game.###########",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	".................................."];
+	
+var titletemplate_empty = [
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	"..................................",
+	".................................."];
 
-var titletemplate_select0_selected = [
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"##################.new game.##################",
-	"..............................................",
-	"...................continue...................",
-	"..............................................",
-	".......arrow keys to move.....................",
-	".......X to action............................",
-	".......Z to undo, R to restart................",
-	".............................................."];
-
-var titletemplate_select1_selected = [
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"..............................................",
-	"...................new game...................",
-	"..............................................",
-	"##################.continue.##################",
-	"..............................................",
-	".......arrow keys to move.....................",
-	".......X to action............................",
-	".......Z to undo, R to restart................",
-	".............................................."];
+var title_options = [[
+	".............continue.............",
+	"...........#.continue.#...........",
+	"############.continue.############"
+], [
+	"...........level select...........",
+	".........#.level select.#.........",
+	"##########.level select.##########"
+], [
+	".............settings.............",
+	"...........#.settings.#...........",
+	"############.settings.############"
+], [
+	".............new game.............",
+	"...........#.new game.#...........",
+	"############.new game.############"
+]];
 
 var titleImage=[];
-var titleWidth=titletemplate_select1[0].length;
-var titleHeight=titletemplate_select1.length;
+var titleWidth=titletemplate_empty[0].length;
+var titleHeight=titletemplate_empty.length;
 var textMode=true;
 var titleScreen=true;
-var titleMode=0;//1 means there are options
+var titleMode=0;//1 means title screen with options, 2 means level select
 var titleSelection=0;
+var titleSelectOptions=2;
 var titleSelected=false;
 
 function unloadGame() {
 	state=introstate;
-	level = new Level(0, 5, 5, 2, null);
+	level = new Level(0, 5, 5, 2, null, null);
 	level.objects = new Int32Array(0);
 	generateTitleScreen();
 	canvasResize();
 	redraw();
+	titleSelected=true;
+}
+
+function isContinueOptionSelected() {
+	if(state.metadata["continue_is_level_select"] !== undefined) {
+		return false;
+	}
+
+	return titleSelection == 0; // continue option is always 1st
+}
+
+function isNewGameOptionSelected() {
+	return titleSelection == titleSelectOptions-1; // new game option is always on bottom
+}
+
+function isLevelSelectOptionSelected() {
+	if(state.metadata["level_select"] === undefined) {
+		return false;
+	}
+	
+	if(state.metadata["continue_is_level_select"] !== undefined) {
+		return titleSelection == 0; // continue option is always 1st
+	}
+
+	return titleSelection == 1; // level select option is always 2nd if it exists
 }
 
 function generateTitleScreen()
 {
+  tryLoadCustomFont();
+
 	titleMode=(curlevel>0||curlevelTarget!==null)?1:0;
 
 	if (state.levels.length===0) {
 		titleImage=intro_template;
 		return;
-	}
+  }
 
 	var title = "PuzzleScript Game";
 	if (state.metadata.title!==undefined) {
@@ -170,39 +173,79 @@ function generateTitleScreen()
 	}
 
 	if (titleMode===0) {
+        titleSelectOptions = 1;
 		if (titleSelected) {
 			titleImage = deepClone(titletemplate_firstgo_selected);		
 		} else {
 			titleImage = deepClone(titletemplate_firstgo);					
 		}
 	} else {
-		if (titleSelection===0) {
-			if (titleSelected) {
-				titleImage = deepClone(titletemplate_select0_selected);		
-			} else {
-				titleImage = deepClone(titletemplate_select0);					
-			}			
-		} else {
-			if (titleSelected) {
-				titleImage = deepClone(titletemplate_select1_selected);		
-			} else {
-				titleImage = deepClone(titletemplate_select1);					
-			}						
+
+		var availableOptions = [0];
+		
+		titleSelectOptions = 2;
+
+		if(state.metadata["level_select"] !== undefined && state.metadata["continue_is_level_select"] === undefined) {
+			titleSelectOptions++;
+			
+			availableOptions.push(1);
+		}
+
+		if(state.metadata["settings"] !== undefined) {
+			titleSelectOptions++;
+			
+			availableOptions.push(2);
+		}
+
+		availableOptions.push(3);
+
+		titleImage = deepClone(titletemplate_empty);
+
+		for(var i = 0; i < titleSelectOptions; i++) {
+			var version = 0;
+			if(titleSelection == i) {
+				if(titleSelected) {
+					version = 2;
+				} else {
+					version = 1;
+				}
+			}
+
+			var j = 0;
+			if(titleSelectOptions == 2 && i == 1) {
+				j = 1;
+			}
+
+			titleImage[5 + i + j] = deepClone(title_options[availableOptions[i]][version]);
 		}
 	}
 
 	var noAction = 'noaction' in state.metadata;	
 	var noUndo = 'noundo' in state.metadata;
 	var noRestart = 'norestart' in state.metadata;
-	if (noUndo && noRestart) {
-		titleImage[11]="..............................................";
-	} else if (noUndo) {
-		titleImage[11]=".......R to restart...........................";
-	} else if (noRestart) {
-		titleImage[11]=".Z to undo.....................";
-	}
+
+	titleImage[10] = ".arrow keys to move...............";
+
 	if (noAction) {
-		titleImage[10]=".......X to select............................";
+		titleImage[11]=".X to select......................";
+	} else {
+		titleImage[11]=" X to action......................"
+	}
+
+	if (noUndo && noRestart) {
+		titleImage[12]="..................................";
+	} else if (noUndo) {
+		titleImage[12]=".R to restart.....................";
+	} else if (noRestart) {
+		titleImage[12]=".Z to undo........................";
+	} else {
+		titleImage[12]=".Z to undo, R to restart..........";
+	}
+
+	if ("mouse_left" in state.metadata || "mouse_drag" in state.metadata || "mouse_up" in state.metadata) {
+		titleImage[10]="..................................";
+		titleImage[11]=".MOUSE to interact................";
+		titleImage[12]=".MMB to undo, R to restart........";
 	}
 	for (var i=0;i<titleImage.length;i++)
 	{
@@ -253,14 +296,195 @@ function generateTitleScreen()
 
 }
 
+var levelSelectScrollPos = 0;
+
+function gotoLevelSelectScreen() {
+	if(state.metadata["level_select"] === undefined){
+		goToTitleScreen();
+		return;
+	}
+	levelSelectScrollPos = 0;
+	titleSelected = false;
+	timer = 0;
+	quittingTitleScreen = false;
+	quittingMessageScreen = false;
+	messageselected = false;
+	titleMode = 2;
+	titleScreen = true;
+	textMode = true;
+    againing = false;
+	messagetext = "";
+
+	if (titleSelection == false) {
+		for(var i = 0; i < state.sections.length; i++) {
+			if(state.sections[i].firstLevel > curlevel) {
+				titleSelection = Math.max(0,i-1);
+				break;
+			}
+		}
+  }
+  
+  state.metadata = deepClone(state.default_metadata);
+  twiddleMetadataExtras();
+
+	generateLevelSelectScreen();
+	redraw();
+}
+
+function generateLevelSelectScreen() {
+	/*
+	"...........select level...........",
+	"..................................",
+	"[✓].#.Testy section maxxx long.#.O",
+	".................................|",
+	"[ ]...Unselected section.........|",
+	".................................|",
+	"[ ]...Another section............|",
+	".................................|",
+	"[ ]...Another section............|",
+	".................................|",
+	"[ ]...Another section............|",
+	".................................|",
+	"[ ]...Another section............|"
+  */
+
+	titleImage = [
+		"ESC: Back             Level Select",
+		"                                  "
+	];
+
+	amountOfLevelsOnScreen = 9;
+
+	titleSelectOptions = state.sections.length;
+
+	if(titleSelection < levelSelectScrollPos) { //Up
+		levelSelectScrollPos = titleSelection;
+	} else if(titleSelection >= levelSelectScrollPos + amountOfLevelsOnScreen) { //Down
+		levelSelectScrollPos = titleSelection - amountOfLevelsOnScreen + 1;
+	}
+
+	var posOnScreen = titleSelection - levelSelectScrollPos;
+	if (posOnScreen == 0) {
+		levelSelectScrollPos = Math.max(0, levelSelectScrollPos - 1);
+		//console.log("On first position");
+	}
+
+	if (posOnScreen == amountOfLevelsOnScreen-1) {
+		levelSelectScrollPos = Math.min(state.sections.length-amountOfLevelsOnScreen, levelSelectScrollPos + 1);
+		//console.log("On last position");
+	}
+
+	if (levelSelectScrollPos != 0) {
+		titleImage.push("            [ PREV ]              ");
+	} else {
+		titleImage.push("                                  ");
+	}
+
+	var unlockedUntil = -1;
+	if(state.metadata["level_select_lock"] !== undefined) {
+		// find last solved section:
+		var unsolvedSections = 0;
+		for(var i = 0; i < state.sections.length; i++) {
+			if(solvedSections.indexOf(state.sections[i].name) >= 0) {
+				unlockedUntil = i;
+			} else {
+				unsolvedSections++;
+			}
+		}
+
+		if(state.metadata.level_select_unlocked_ahead === undefined) {
+			unlockedUntil += 1;
+		} else {
+			unlockedUntil += Number(state.metadata.level_select_unlocked_ahead);
+		}	
+	}
+	//console.log(unlockedUntil);
+
+	for(var i = levelSelectScrollPos; i < levelSelectScrollPos + amountOfLevelsOnScreen; i++) {
+		if(i < 0 || i >= state.sections.length) {
+			break;
+		}
+
+		var section = state.sections[i];
+		var solved = (solvedSections.indexOf(section.name) >= 0);
+		var selected = (i == titleSelection);
+		var locked = (unlockedUntil >= 0 && i > unlockedUntil);
+
+		var name = section.name.substring(0, 24);
+		
+		if(locked) {
+			if(selected && titleSelected) {
+				titleSelected = false;
+				quittingTitleScreen = false;
+			}
+
+			var l = name.length;
+			name = "";
+			for(var j = 0; j < l; j++) {
+				name += "*";
+			}
+		}
+		
+		var solved_symbol = "✓";
+		if(state.metadata.level_select_solve_symbol !== undefined) {
+			solved_symbol = state.metadata.level_select_solve_symbol;
+		}
+		var line = (solved ? solved_symbol : " ") + " ";
+		
+		line += (selected ? "#" : " ") + " " + name;
+		for(var j = name.length; j < 25; j++) {
+			if(selected && titleSelected && j != name.length) {
+				line += "#";
+			} else {
+				line += " ";
+			}
+		}
+		line += (selected ? "#" : " ") + "  ";
+
+		titleImage.push(line);
+	}
+
+	if (levelSelectScrollPos != titleSelectOptions - amountOfLevelsOnScreen && titleSelectOptions - amountOfLevelsOnScreen > 0) {
+		titleImage.push("            [ NEXT ]              ")
+	} else {
+		titleImage.push("                                  ");
+	}
+
+	for(var i = titleImage.length; i < 13; i++) {
+		titleImage.push("                                  ");
+	}
+}
+
+function gotoLevel(sectionIndex) {
+  if (solving) {
+    return;
+  }
+
+  if (sectionIndex < 0) {return;} //Invalid index
+
+  console.log(sectionIndex);
+
+	againing = false;
+	messagetext = "";
+
+	curlevel = state.sections[sectionIndex].firstLevel;
+
+	loadLevelFromStateOrTarget();
+
+	updateLocalStorage();
+	resetFlickDat();
+	canvasResize();	
+	clearInputHistory();
+}
+
 var introstate = {
-	title: "EMPTY GAME",
-	attribution: "increpare",
-   	objectCount: 2,
-   	metadata:[],
-   	levels:[],
-   	bgcolor:"#000000",
-   	fgcolor:"#FFFFFF"
+  title: "EMPTY GAME",
+  attribution: "increpare",
+    objectCount: 2,
+    metadata:[],
+    levels:[],
+    bgcolor:"#000000",
+    fgcolor:"#FFFFFF"
 };
 
 var state = introstate;
@@ -332,9 +556,14 @@ function wordwrap( str, width ) {
 var splitMessage=[];
 
 function drawMessageScreen() {
+	tryLoadCustomFont();
+
 	titleMode=0;
 	textMode=true;
-	titleImage = deepClone(messagecontainer_template);
+	if ("mouse_left" in state.metadata || "mouse_drag" in state.metadata || "mouse_up" in state.metadata)
+		titleImage = deepClone(messagecontainer_template_mouse);
+	else
+		titleImage = deepClone(messagecontainer_template);
 
 	for (var i=0;i<titleImage.length;i++)
 	{
@@ -383,13 +612,13 @@ function drawMessageScreen() {
 			endPos = 12;
 		}
         }
-	if (quittingMessageScreen) {
-		titleImage[endPos]=emptyLineStr;
-	} else {
-		titleImage[endPos]=xToContinueStr;
-	}
-	
-	canvasResize();
+  if (quittingMessageScreen) {
+    titleImage[endPos]=emptyLineStr;
+  } else {
+    titleImage[endPos]=xToContinueStr;
+  }
+  
+  canvasResize();
 }
 
 var loadedLevelSeed=0;
@@ -403,21 +632,31 @@ function loadLevelFromLevelDat(state,leveldat,randomseed) {
 	forceRegenImages=true;
 	titleScreen=false;
 	titleMode=(curlevel>0||curlevelTarget!==null)?1:0;
-	titleSelection=(curlevel>0||curlevelTarget!==null)?1:0;
-	titleSelected=false;
+	titleSelection=0;
+  titleSelected=false;
+  state.metadata = deepClone(state.default_metadata);
     againing=false;
     if (leveldat===undefined) {
     	consolePrint("Trying to access a level that doesn't exist.",true);
-	goToTitleScreen();
+		goToTitleScreen();
     	return;
     }
-    if (leveldat.message===undefined) {
-    	titleMode=0;
-    	textMode=false;
-		level = leveldat.clone();
-		RebuildLevelArrays();
-
-
+    if (leveldat.message !== undefined) {
+      // This "level" is actually a message.
+      tryPlayShowMessageSound();
+      drawMessageScreen();
+      canvasResize();
+      clearInputHistory();
+    } else if (leveldat.target !== undefined) {
+      // This "level" is actually a goto.
+      //tryPlayGotoSound();
+      setSectionSolved(state.levels[Number(curlevel)].section)
+      gotoLevel(leveldat.target);
+    } else {
+      titleMode=0;
+      textMode=false;
+    level = leveldat.clone();
+    RebuildLevelArrays();
         if (state!==undefined) {
 	        if (state.metadata.flickscreen!==undefined){
 	            oldflickscreendat=[
@@ -433,51 +672,56 @@ function loadLevelFromLevelDat(state,leveldat,randomseed) {
 	            	Math.min(state.metadata.zoomscreen[0],level.width),
 	            	Math.min(state.metadata.zoomscreen[1],level.height)
 	            ];
+	        } else if (state.metadata.smoothscreen!==undefined){
+	            oldflickscreendat=[
+	            	0,
+	            	0,
+	            	Math.min(state.metadata.smoothscreen.screenSize.width,level.width),
+	            	Math.min(state.metadata.smoothscreen.screenSize.height,level.height)
+	            ];
 	        }
         }
+
+      initSmoothCamera();
+      twiddleMetadataExtras();
 
 	    backups=[]
 	    restartTarget=backupLevel();
 		keybuffer=[];
 
-	    if ('run_rules_on_level_start' in state.metadata) {
-			processInput(-1,true);
-	    }
-	} else {
-		tryPlayShowMessageSound();
-		drawMessageScreen();
-    	canvasResize();
-	}
-
-	clearInputHistory();
+      if ('run_rules_on_level_start' in state.metadata) {
+      processInput(-1,true);
+      }
+      clearInputHistory();
+  }
 }
 
-function loadLevelFromStateTarget(state,levelindex,target,randomseed) {	
+function loadLevelFromStateTarget(state,levelindex,target,randomseed) { 
     var leveldat = target;    
-	curlevel=levelindex;
-	curlevelTarget=target;
+  curlevel=levelindex;
+  curlevelTarget=target;
     if (leveldat.message===undefined) {
-	    if (levelindex=== 0){ 
-			tryPlayStartLevelSound();
-		} else {
-			tryPlayStartLevelSound();			
-		}
+      if (levelindex=== 0){ 
+      tryPlayStartLevelSound();
+    } else {
+      tryPlayStartLevelSound();     
+    }
     }
     loadLevelFromLevelDat(state,state.levels[levelindex],randomseed);
-    restoreLevel(target);
+    restoreLevel(target, true);
     restartTarget=target;
 }
 
-function loadLevelFromState(state,levelindex,randomseed) {	
+function loadLevelFromState(state,levelindex,randomseed) {  
     var leveldat = state.levels[levelindex];    
-	curlevel=levelindex;
-	curlevelTarget=null;
+  curlevel=levelindex;
+  curlevelTarget=null;
     if (leveldat!==undefined && leveldat.message===undefined) {
-	    if (levelindex=== 0){ 
-			tryPlayStartLevelSound();
-		} else {
-			tryPlayStartLevelSound();			
-		}
+      if (levelindex=== 0){ 
+      tryPlayStartLevelSound();
+    } else {
+      tryPlayStartLevelSound();     
+    }
     }
     loadLevelFromLevelDat(state,leveldat,randomseed);
 }
@@ -505,58 +749,75 @@ var sprites = [
 }
 ];
 
+loadedCustomFont = false;
+
+function tryLoadCustomFont() {
+	if(state == null || state.metadata == null || state.metadata.custom_font == undefined || loadedCustomFont) {
+		return;
+	}
+
+	var custom_font = new FontFace('PuzzleCustomFont', 'url('+state.metadata.custom_font+')');
+	custom_font.load().then(function(loaded_face) {
+		document.fonts.add(loaded_face);
+		loadedCustomFont = true;
+		canvasResize();
+		redraw();
+	}).catch(function(error) {alert("Unable to load font!");});
+}
+
+tryLoadCustomFont();
 
 generateTitleScreen();
 if (titleMode>0){
-	titleSelection=1;
+	titleSelection=0;
 }
 
 canvasResize();
 
 function tryPlaySimpleSound(soundname) {
-	if (state.sfx_Events[soundname]!==undefined) {
-		var seed = state.sfx_Events[soundname];
-		playSound(seed);
-	}
+  if (state.sfx_Events[soundname]!==undefined) {
+    var seed = state.sfx_Events[soundname];
+    playSound(seed);
+  }
 }
 function tryPlayTitleSound() {
-	tryPlaySimpleSound("titlescreen");
+  tryPlaySimpleSound("titlescreen");
 }
 
 function tryPlayStartGameSound() {
-	tryPlaySimpleSound("startgame");
+  tryPlaySimpleSound("startgame");
 }
 
 function tryPlayEndGameSound() {
-	tryPlaySimpleSound("endgame");
+  tryPlaySimpleSound("endgame");
 }
 
 function tryPlayCancelSound() {
-	tryPlaySimpleSound("cancel");
+  tryPlaySimpleSound("cancel");
 }
 
 function tryPlayStartLevelSound() {
-	tryPlaySimpleSound("startlevel");
+  tryPlaySimpleSound("startlevel");
 }
 
 function tryPlayEndLevelSound() {
-	tryPlaySimpleSound("endlevel");
+  tryPlaySimpleSound("endlevel");
 }
 
 function tryPlayUndoSound(){
-	tryPlaySimpleSound("undo");
+  tryPlaySimpleSound("undo");
 }
 
 function tryPlayRestartSound(){
-	tryPlaySimpleSound("restart");
+  tryPlaySimpleSound("restart");
 }
 
 function tryPlayShowMessageSound(){
-	tryPlaySimpleSound("showmessage");
+  tryPlaySimpleSound("showmessage");
 }
 
 function tryPlayCloseMessageSound(){
-	tryPlaySimpleSound("closemessage");
+  tryPlaySimpleSound("closemessage");
 }
 
 var backups=[];
@@ -567,8 +828,14 @@ function backupLevel() {
 		dat : new Int32Array(level.objects),
 		width : level.width,
 		height : level.height,
-		oldflickscreendat: oldflickscreendat.concat([])
+		oldflickscreendat: oldflickscreendat.concat([]),
+    cameraPositionTarget: Object.assign({}, cameraPositionTarget)
 	};
+	if (state.metadata.runtime_metadata_twiddling !== undefined) {
+      var metadata = deepClone(state.metadata)
+      delete metadata.custom_font;
+      ret.metadata = metadata;
+    }
 	return ret;
 }
 
@@ -577,48 +844,49 @@ function level4Serialization() {
 		dat : Array.from(level.objects),
 		width : level.width,
 		height : level.height,
-		oldflickscreendat: oldflickscreendat.concat([])
+		oldflickscreendat: oldflickscreendat.concat([]),
+    cameraPositionTarget: Object.assign({}, cameraPositionTarget)
 	};
 	return ret;
 }
 
 
 function tryDeactivateYoutube(){
-	var youtubeFrame = document.getElementById("youtubeFrame");
-	if (youtubeFrame){
-		document.body.removeChild(youtubeFrame);
-	}
+  var youtubeFrame = document.getElementById("youtubeFrame");
+  if (youtubeFrame){
+    document.body.removeChild(youtubeFrame);
+  }
 }
 
 function tryActivateYoutube(){
-	var youtubeFrame = document.getElementById("youtubeFrame");
-	if (youtubeFrame){
-		return;
-	}
-	if (canYoutube) {
-		if ('youtube' in state.metadata) {
-			var youtubeid=state.metadata['youtube'];
-			var url = "https://www.youtube.com/embed/"+youtubeid+"?autoplay=1&loop=1&playlist="+youtubeid;
-			ifrm = document.createElement("IFRAME");
-			ifrm.setAttribute("src",url);
-			ifrm.setAttribute("id","youtubeFrame");
-			ifrm.style.visibility="hidden";
-			ifrm.style.width="500px";
-			ifrm.style.height="500px";
-			ifrm.style.position="absolute";
-			ifrm.style.top="-1000px";
-			ifrm.style.left="-1000px";
-			document.body.appendChild(ifrm);
-		}
-	}
+  var youtubeFrame = document.getElementById("youtubeFrame");
+  if (youtubeFrame){
+    return;
+  }
+  if (canYoutube) {
+    if ('youtube' in state.metadata) {
+      var youtubeid=state.metadata['youtube'];
+      var url = "https://www.youtube.com/embed/"+youtubeid+"?autoplay=1&loop=1&playlist="+youtubeid;
+      ifrm = document.createElement("IFRAME");
+      ifrm.setAttribute("src",url);
+      ifrm.setAttribute("id","youtubeFrame");
+      ifrm.style.visibility="hidden";
+      ifrm.style.width="500px";
+      ifrm.style.height="500px";
+      ifrm.style.position="absolute";
+      ifrm.style.top="-1000px";
+      ifrm.style.left="-1000px";
+      document.body.appendChild(ifrm);
+    }
+  }
 }
 
 function setGameState(_state, command, randomseed) {
-	oldflickscreendat=[];
-	timer=0;
-	autotick=0;
-	winning=false;
-	againing=false;
+  oldflickscreendat=[];
+  timer=0;
+  autotick=0;
+  winning=false;
+  againing=false;
     messageselected=false;
     STRIDE_MOV=_state.STRIDE_MOV;
     STRIDE_OBJ=_state.STRIDE_OBJ;
@@ -626,21 +894,21 @@ function setGameState(_state, command, randomseed) {
     sfxCreateMask=new BitVec(STRIDE_OBJ);
     sfxDestroyMask=new BitVec(STRIDE_OBJ);
 
-	if (command===undefined) {
-		command=["restart"];
-	}
-	if ((state.levels.length===0 || _state.levels.length===0) && command.length>0 && command[0]==="rebuild")  {
-		command=["restart"];
-	}
-	if (randomseed===undefined) {
-		randomseed=null;
-	}
-	RandomGen = new RNG(randomseed);
+  if (command===undefined) {
+    command=["restart"];
+  }
+  if ((state.levels.length===0 || _state.levels.length===0) && command.length>0 && command[0]==="rebuild")  {
+    command=["restart"];
+  }
+  if (randomseed===undefined) {
+    randomseed=null;
+  }
+  RandomGen = new RNG(randomseed);
 
-	state = _state;
+  state = _state;
 
     if (command[0]!=="rebuild"){
-    	backups=[];
+      backups=[];
     }
     //set sprites
     sprites = [];
@@ -655,26 +923,26 @@ function setGameState(_state, command, randomseed) {
         }
     }
     if (state.metadata.realtime_interval!==undefined) {
-    	autotick=0;
-    	autotickinterval=state.metadata.realtime_interval*1000;
+      autotick=0;
+      autotickinterval=state.metadata.realtime_interval*1000;
     } else {
-    	autotick=0;
-    	autotickinterval=0;
+      autotick=0;
+      autotickinterval=0;
     }
 
     if (state.metadata.key_repeat_interval!==undefined) {
-		repeatinterval=state.metadata.key_repeat_interval*1000;
+    repeatinterval=state.metadata.key_repeat_interval*1000;
     } else {
-    	repeatinterval=150;
+      repeatinterval=150;
     }
 
     if (state.metadata.again_interval!==undefined) {
-		againinterval=state.metadata.again_interval*1000;
+    againinterval=state.metadata.again_interval*1000;
     } else {
-    	againinterval=150;
+      againinterval=150;
     }
     if (throttle_movement && autotickinterval===0) {
-    	logWarning("throttle_movement is designed for use in conjunction with realtime_interval. Using it in other situations makes games gross and unresponsive, broadly speaking.  Please don't.");
+      logWarning("throttle_movement is designed for use in conjunction with realtime_interval. Using it in other situations makes games gross and unresponsive, broadly speaking.  Please don't.");
     }
     norepeat_action = state.metadata.norepeat_action!==undefined;
     
@@ -690,7 +958,7 @@ function setGameState(_state, command, randomseed) {
 		    titleScreen=true;
 		    tryPlayTitleSound();
 		    textMode=true;
-		    titleSelection=(curlevel>0||curlevelTarget!==null)?1:0;
+		    titleSelection=0;
 		    titleSelected=false;
 		    quittingMessageScreen=false;
 		    quittingTitleScreen=false;
@@ -718,7 +986,7 @@ function setGameState(_state, command, randomseed) {
 			    timer=0;
 			    titleScreen=false;
 			    textMode=false;
-			    titleSelection=(curlevel>0||curlevelTarget!==null)?1:0;
+			    //titleSelection=(curlevel>0||curlevelTarget!==null)?1:0;
 			    titleSelected=false;
 			    quittingMessageScreen=false;
 			    quittingTitleScreen=false;
@@ -737,7 +1005,7 @@ function setGameState(_state, command, randomseed) {
 		    timer=0;
 		    titleScreen=false;
 		    textMode=false;
-		    titleSelection=(curlevel>0||curlevelTarget!==null)?1:0;
+		    //titleSelection=(curlevel>0||curlevelTarget!==null)?1:0;
 		    titleSelected=false;
 		    quittingMessageScreen=false;
 		    quittingTitleScreen=false;
@@ -757,7 +1025,7 @@ function setGameState(_state, command, randomseed) {
 				    timer=0;
 				    titleScreen=false;
 				    textMode=false;
-				    titleSelection=(curlevel>0||curlevelTarget!==null)?1:0;
+				    //titleSelection=(curlevel>0||curlevelTarget!==null)?1:0;
 				    titleSelected=false;
 				    quittingMessageScreen=false;
 				    quittingTitleScreen=false;
@@ -770,54 +1038,52 @@ function setGameState(_state, command, randomseed) {
 			break;
 		}
 	}
-	
+
 	if(command[0] !== "rebuild") {
 		clearInputHistory();
 	}
 	canvasResize();
-
 
 	if (state.sounds.length==0&&state.metadata.youtube==null){
 		killAudioButton();
 	} else {
 		showAudioButton();
 	}
-	
 }
 
 function RebuildLevelArrays() {
-	level.movements = new Int32Array(level.n_tiles * STRIDE_MOV);
+  level.movements = new Int32Array(level.n_tiles * STRIDE_MOV);
 
     level.rigidMovementAppliedMask = [];
     level.rigidGroupIndexMask = [];
-	level.rowCellContents = [];
-	level.colCellContents = [];
-	level.mapCellContents = new BitVec(STRIDE_OBJ);
-	_movementVecs = [new BitVec(STRIDE_MOV),new BitVec(STRIDE_MOV),new BitVec(STRIDE_MOV)];
+  level.rowCellContents = [];
+  level.colCellContents = [];
+  level.mapCellContents = new BitVec(STRIDE_OBJ);
+  _movementVecs = [new BitVec(STRIDE_MOV),new BitVec(STRIDE_MOV),new BitVec(STRIDE_MOV)];
 
-	_o1 = new BitVec(STRIDE_OBJ);
-	_o2 = new BitVec(STRIDE_OBJ);
-	_o2_5 = new BitVec(STRIDE_OBJ);
-	_o3 = new BitVec(STRIDE_OBJ);
-	_o4 = new BitVec(STRIDE_OBJ);
-	_o5 = new BitVec(STRIDE_OBJ);
-	_o6 = new BitVec(STRIDE_OBJ);
-	_o7 = new BitVec(STRIDE_OBJ);
-	_o8 = new BitVec(STRIDE_OBJ);
-	_o9 = new BitVec(STRIDE_OBJ);
-	_o10 = new BitVec(STRIDE_OBJ);
-	_o11 = new BitVec(STRIDE_OBJ);
-	_o12 = new BitVec(STRIDE_OBJ);
-	_m1 = new BitVec(STRIDE_MOV);
-	_m2 = new BitVec(STRIDE_MOV);
-	_m3 = new BitVec(STRIDE_MOV);
-	
+  _o1 = new BitVec(STRIDE_OBJ);
+  _o2 = new BitVec(STRIDE_OBJ);
+  _o2_5 = new BitVec(STRIDE_OBJ);
+  _o3 = new BitVec(STRIDE_OBJ);
+  _o4 = new BitVec(STRIDE_OBJ);
+  _o5 = new BitVec(STRIDE_OBJ);
+  _o6 = new BitVec(STRIDE_OBJ);
+  _o7 = new BitVec(STRIDE_OBJ);
+  _o8 = new BitVec(STRIDE_OBJ);
+  _o9 = new BitVec(STRIDE_OBJ);
+  _o10 = new BitVec(STRIDE_OBJ);
+  _o11 = new BitVec(STRIDE_OBJ);
+  _o12 = new BitVec(STRIDE_OBJ);
+  _m1 = new BitVec(STRIDE_MOV);
+  _m2 = new BitVec(STRIDE_MOV);
+  _m3 = new BitVec(STRIDE_MOV);
+  
 
     for (var i=0;i<level.height;i++) {
-    	level.rowCellContents[i]=new BitVec(STRIDE_OBJ);	    	
+      level.rowCellContents[i]=new BitVec(STRIDE_OBJ);        
     }
     for (var i=0;i<level.width;i++) {
-    	level.colCellContents[i]=new BitVec(STRIDE_OBJ);	    	
+      level.colCellContents[i]=new BitVec(STRIDE_OBJ);        
     }
 
     for (var i=0;i<level.n_tiles;i++)
@@ -828,7 +1094,7 @@ function RebuildLevelArrays() {
 }
 
 var messagetext="";
-function restoreLevel(lev) {
+function restoreLevel(lev, snapCamera) {
 	oldflickscreendat=lev.oldflickscreendat.concat([]);
 
 	level.objects = new Int32Array(lev.dat);
@@ -860,6 +1126,19 @@ function restoreLevel(lev) {
 	    }
 	}
 
+    if (lev.cameraPositionTarget) {
+      cameraPositionTarget = Object.assign({}, lev.cameraPositionTarget);
+
+      if (snapCamera) {
+        cameraPosition = Object.assign({}, cameraPositionTarget)
+      }
+    }
+    
+    if (state.metadata.runtime_metadata_twiddling !== undefined) {
+     state.metadata = deepClone(lev.metadata);
+     twiddleMetadataExtras();
+    }
+
     againing=false;
     level.commandQueue=[];
     level.commandQueueSourceRules=[];
@@ -867,6 +1146,7 @@ function restoreLevel(lev) {
 
 var zoomscreen=false;
 var flickscreen=false;
+var smoothscreen=false;
 var screenwidth=0;
 var screenheight=0;
 
@@ -886,12 +1166,14 @@ function DoRestart(force) {
 		consolePrint("--- restarting ---",true);
 	}
 
-	restoreLevel(restartTarget);
+	restoreLevel(restartTarget, true);
 	tryPlayRestartSound();
 
 	if ('run_rules_on_level_start' in state.metadata) {
     	processInput(-1,true);
-	}
+  }
+  
+  twiddleMetadataExtras();
 	
 	level.commandQueue=[];
 	level.commandQueueSourceRules=[];
@@ -899,40 +1181,40 @@ function DoRestart(force) {
 }
 
 function backupDiffers(){
-	if (backups.length==0){
-		return true;
-	}
-	var bak = backups[backups.length-1];
-	for (var i=0;i<level.objects.length;i++) {
-    	if (level.objects[i]!==bak.dat[i]) {
-    		return true;
-    	}
+  if (backups.length==0){
+    return true;
+  }
+  var bak = backups[backups.length-1];
+  for (var i=0;i<level.objects.length;i++) {
+      if (level.objects[i]!==bak.dat[i]) {
+        return true;
+      }
     }
     return false;
 }
 
 function DoUndo(force,ignoreDuplicates) {
-	if ((!levelEditorOpened)&&('noundo' in state.metadata && force!==true)) {
-		return;
-	}
-	if (verbose_logging) {
-		consolePrint("--- undoing ---",true);
-	}
+  if ((!levelEditorOpened)&&('noundo' in state.metadata && force!==true)) {
+    return;
+  }
+  if (verbose_logging) {
+    consolePrint("--- undoing ---",true);
+  }
 
-	if (ignoreDuplicates){
-		while (backupDiffers()==false){
-			backups.pop();
-		}
-	}
+  if (ignoreDuplicates){
+    while (backupDiffers()==false){
+      backups.pop();
+    }
+  }
 
-	if (backups.length>0) {
-		var torestore = backups[backups.length-1];
-		restoreLevel(torestore);
-		backups = backups.splice(0,backups.length-1);
-		if (! force) {
-			tryPlayUndoSound();
-		}
-	}
+  if (backups.length>0) {
+    var torestore = backups[backups.length-1];
+    restoreLevel(torestore);
+    backups = backups.splice(0,backups.length-1);
+    if (! force) {
+      tryPlayUndoSound();
+    }
+  }
 }
 
 function getPlayerPositions() {
@@ -966,14 +1248,14 @@ function moveEntitiesAtIndex(positionIndex, entityMask, dirMask) {
 
     var movementMask = level.getMovements(positionIndex);
     for (var i=0;i<layers.length;i++) {
-    	movementMask.ishiftor(dirMask, 5 * layers[i]);
+      movementMask.ishiftor(dirMask, 5 * layers[i]);
     }
     level.setMovements(positionIndex, movementMask);
 }
 
 
 function startMovement(dir) {
-	var movedany=false;
+  var movedany=false;
     var playerPositions = getPlayerPositions();
     for (var i=0;i<playerPositions.length;i++) {
         var playerPosIndex = playerPositions[i];
@@ -1017,7 +1299,7 @@ function repositionEntitiesOnLayer(positionIndex,layer,dirMask)
     var maxy = level.height-1;
 
     if ( (tx===0&&dx<0) || (tx===maxx&&dx>0) || (ty===0&&dy<0) || (ty===maxy&&dy>0)) {
-    	return false;
+      return false;
     }
 
     var targetIndex = (positionIndex+delta[1]+delta[0]*level.height);
@@ -1030,17 +1312,17 @@ function repositionEntitiesOnLayer(positionIndex,layer,dirMask)
         return false;
     }
 
-	for (var i=0;i<state.sfx_MovementMasks.length;i++) {
-		var o = state.sfx_MovementMasks[i];
-		var objectMask = o.objectMask;
-		if (objectMask.anyBitsInCommon(sourceMask)) {
-			var movementMask = level.getMovements(positionIndex);
-			var directionMask = o.directionMask;
-			if (movementMask.anyBitsInCommon(directionMask) && seedsToPlay_CanMove.indexOf(o.seed)===-1) {
-				seedsToPlay_CanMove.push(o.seed);
-			}
-		}
-	}
+  for (var i=0;i<state.sfx_MovementMasks.length;i++) {
+    var o = state.sfx_MovementMasks[i];
+    var objectMask = o.objectMask;
+    if (objectMask.anyBitsInCommon(sourceMask)) {
+      var movementMask = level.getMovements(positionIndex);
+      var directionMask = o.directionMask;
+      if (movementMask.anyBitsInCommon(directionMask) && seedsToPlay_CanMove.indexOf(o.seed)===-1) {
+        seedsToPlay_CanMove.push(o.seed);
+      }
+    }
+  }
 
     var movingEntities = sourceMask.clone();
     sourceMask.iclear(layerMask);
@@ -1051,7 +1333,7 @@ function repositionEntitiesOnLayer(positionIndex,layer,dirMask)
     level.setCell(targetIndex, targetMask);
 
     var colIndex=(targetIndex/level.height)|0;
-	var rowIndex=(targetIndex%level.height);
+  var rowIndex=(targetIndex%level.height);
     level.colCellContents[colIndex].ior(movingEntities);
     level.rowCellContents[rowIndex].ior(movingEntities);
     level.mapCellContents.ior(movingEntities);
@@ -1075,85 +1357,86 @@ function repositionEntitiesAtCell(positionIndex) {
         }
     }
 
-   	level.setMovements(positionIndex, movementMask);
+    level.setMovements(positionIndex, movementMask);
 
     return moved;
 }
 
 
-function Level(lineNumber, width, height, layerCount, objects) {
+function Level(lineNumber, width, height, layerCount, objects, section) {
 	this.lineNumber = lineNumber;
 	this.width = width;
 	this.height = height;
 	this.n_tiles = width * height;
 	this.objects = objects;
+	this.section = section;
 	this.layerCount = layerCount;
 	this.commandQueue = [];
 	this.commandQueueSourceRules = [];
 }
 
 Level.prototype.clone = function() {
-	var clone = new Level(this.lineNumber, this.width, this.height, this.layerCount, null);
+	var clone = new Level(this.lineNumber, this.width, this.height, this.layerCount, null, this.section);
 	clone.objects = new Int32Array(this.objects);
 	return clone;
 }
 
 Level.prototype.getCell = function(index) {
-	return new BitVec(this.objects.subarray(index * STRIDE_OBJ, index * STRIDE_OBJ + STRIDE_OBJ));
+  return new BitVec(this.objects.subarray(index * STRIDE_OBJ, index * STRIDE_OBJ + STRIDE_OBJ));
 }
 
 Level.prototype.getCellInto = function(index,targetarray) {
-	for (var i=0;i<STRIDE_OBJ;i++) {
-		targetarray.data[i]=this.objects[index*STRIDE_OBJ+i];	
-	}
-	return targetarray;
+  for (var i=0;i<STRIDE_OBJ;i++) {
+    targetarray.data[i]=this.objects[index*STRIDE_OBJ+i]; 
+  }
+  return targetarray;
 }
 
 Level.prototype.setCell = function(index, vec) {
-	for (var i = 0; i < vec.data.length; ++i) {
-		this.objects[index * STRIDE_OBJ + i] = vec.data[i];
-	}
+  for (var i = 0; i < vec.data.length; ++i) {
+    this.objects[index * STRIDE_OBJ + i] = vec.data[i];
+  }
 }
 
 var _movementVecs;
 var _movementVecIndex=0;
 Level.prototype.getMovements = function(index) {
-	var _movementsVec=_movementVecs[_movementVecIndex];
-	_movementVecIndex=(_movementVecIndex+1)%_movementVecs.length;
+  var _movementsVec=_movementVecs[_movementVecIndex];
+  _movementVecIndex=(_movementVecIndex+1)%_movementVecs.length;
 
-	for (var i=0;i<STRIDE_MOV;i++) {
-		_movementsVec.data[i]=this.movements[index*STRIDE_MOV+i];	
-	}
-	return _movementsVec;
+  for (var i=0;i<STRIDE_MOV;i++) {
+    _movementsVec.data[i]=this.movements[index*STRIDE_MOV+i]; 
+  }
+  return _movementsVec;
 }
 
 Level.prototype.setMovements = function(index, vec) {
-	for (var i = 0; i < vec.data.length; ++i) {
-		this.movements[index * STRIDE_MOV + i] = vec.data[i];
-	}
+  for (var i = 0; i < vec.data.length; ++i) {
+    this.movements[index * STRIDE_MOV + i] = vec.data[i];
+  }
 }
 
 var ellipsisPattern = ['ellipsis'];
 
 function BitVec(init) {
-	this.data = new Int32Array(init);
-	return this;
+  this.data = new Int32Array(init);
+  return this;
 }
 
 BitVec.prototype.cloneInto = function(target) {
-	for (var i=0;i<this.data.length;++i) {
-		target.data[i]=this.data[i];
-	}
-	return target;
+  for (var i=0;i<this.data.length;++i) {
+    target.data[i]=this.data[i];
+  }
+  return target;
 }
 BitVec.prototype.clone = function() {
-	return new BitVec(this.data);
+  return new BitVec(this.data);
 }
 
 BitVec.prototype.iand = function(other) {
-	for (var i = 0; i < this.data.length; ++i) {
-		this.data[i] &= other.data[i];
-	}
+  for (var i = 0; i < this.data.length; ++i) {
+    this.data[i] &= other.data[i];
+  }
 }
 
 
@@ -1164,240 +1447,240 @@ BitVec.prototype.inot = function() {
 }
 
 BitVec.prototype.ior = function(other) {
-	for (var i = 0; i < this.data.length; ++i) {
-		this.data[i] |= other.data[i];
-	}
+  for (var i = 0; i < this.data.length; ++i) {
+    this.data[i] |= other.data[i];
+  }
 }
 
 BitVec.prototype.iclear = function(other) {
-	for (var i = 0; i < this.data.length; ++i) {
-		this.data[i] &= ~other.data[i];
-	}
+  for (var i = 0; i < this.data.length; ++i) {
+    this.data[i] &= ~other.data[i];
+  }
 }
 
 BitVec.prototype.ibitset = function(ind) {
-	this.data[ind>>5] |= 1 << (ind & 31);
+  this.data[ind>>5] |= 1 << (ind & 31);
 }
 
 BitVec.prototype.ibitclear = function(ind) {
-	this.data[ind>>5] &= ~(1 << (ind & 31));
+  this.data[ind>>5] &= ~(1 << (ind & 31));
 }
 
 BitVec.prototype.get = function(ind) {
-	return (this.data[ind>>5] & 1 << (ind & 31)) !== 0;
+  return (this.data[ind>>5] & 1 << (ind & 31)) !== 0;
 }
 
 BitVec.prototype.getshiftor = function(mask, shift) {
-	var toshift = shift & 31;
-	var ret = this.data[shift>>5] >>> (toshift);
-	if (toshift) {
-		ret |= this.data[(shift>>5)+1] << (32 - toshift);
-	}
-	return ret & mask;
+  var toshift = shift & 31;
+  var ret = this.data[shift>>5] >>> (toshift);
+  if (toshift) {
+    ret |= this.data[(shift>>5)+1] << (32 - toshift);
+  }
+  return ret & mask;
 }
 
 BitVec.prototype.ishiftor = function(mask, shift) {
-	var toshift = shift&31;
-	var low = mask << toshift;
-	this.data[shift>>5] |= low;
-	if (toshift) {
-		var high = mask >> (32 - toshift);
-		this.data[(shift>>5)+1] |= high;
-	}
+  var toshift = shift&31;
+  var low = mask << toshift;
+  this.data[shift>>5] |= low;
+  if (toshift) {
+    var high = mask >> (32 - toshift);
+    this.data[(shift>>5)+1] |= high;
+  }
 }
 
 BitVec.prototype.ishiftclear = function(mask, shift) {
-	var toshift = shift & 31;
-	var low = mask << toshift;
-	this.data[shift>>5] &= ~low;
-	if (toshift){
-		var high = mask >> (32 - (shift & 31));
-		this.data[(shift>>5)+1] &= ~high;
-	}
+  var toshift = shift & 31;
+  var low = mask << toshift;
+  this.data[shift>>5] &= ~low;
+  if (toshift){
+    var high = mask >> (32 - (shift & 31));
+    this.data[(shift>>5)+1] &= ~high;
+  }
 }
 
 BitVec.prototype.equals = function(other) {
-	if (this.data.length !== other.data.length)
-		return false;
-	for (var i = 0; i < this.data.length; ++i) {
-		if (this.data[i] !== other.data[i])
-			return false;
-	}
-	return true;
+  if (this.data.length !== other.data.length)
+    return false;
+  for (var i = 0; i < this.data.length; ++i) {
+    if (this.data[i] !== other.data[i])
+      return false;
+  }
+  return true;
 }
 
 BitVec.prototype.setZero = function() {
-	for (var i = 0; i < this.data.length; ++i) {
-		this.data[i]=0;
-	}
+  for (var i = 0; i < this.data.length; ++i) {
+    this.data[i]=0;
+  }
 }
 
 BitVec.prototype.iszero = function() {
-	for (var i = 0; i < this.data.length; ++i) {
-		if (this.data[i])
-			return false;
-	}
-	return true;
+  for (var i = 0; i < this.data.length; ++i) {
+    if (this.data[i])
+      return false;
+  }
+  return true;
 }
 
 BitVec.prototype.bitsSetInArray = function(arr) {
-	for (var i = 0; i < this.data.length; ++i) {
-		if ((this.data[i] & arr[i]) !== this.data[i]) {
-			return false;
-		}
-	}
-	return true;
+  for (var i = 0; i < this.data.length; ++i) {
+    if ((this.data[i] & arr[i]) !== this.data[i]) {
+      return false;
+    }
+  }
+  return true;
 }
 
 BitVec.prototype.bitsClearInArray = function(arr) {
-	for (var i = 0; i < this.data.length; ++i) {
-		if (this.data[i] & arr[i]) {
-			return false;
-		}
-	}
-	return true;
+  for (var i = 0; i < this.data.length; ++i) {
+    if (this.data[i] & arr[i]) {
+      return false;
+    }
+  }
+  return true;
 }
 
 BitVec.prototype.anyBitsInCommon = function(other) {
-	return !this.bitsClearInArray(other.data);
+  return !this.bitsClearInArray(other.data);
 }
 
 function Rule(rule) {
-	this.direction = rule[0]; 		/* direction rule scans in */
-	this.patterns = rule[1];		/* lists of CellPatterns to match */
-	this.hasReplacements = rule[2];
-	this.lineNumber = rule[3];		/* rule source for debugging */
-	this.isEllipsis = rule[4];		/* true if pattern has ellipsis */
-	this.groupNumber = rule[5];		/* execution group number of rule */
-	this.isRigid = rule[6];
-	this.commands = rule[7];		/* cancel, restart, sfx, etc */
-	this.isRandom = rule[8];
-	this.cellRowMasks = rule[9];
-	this.cellRowMatches = [];
-	for (var i=0;i<this.patterns.length;i++) {
-		this.cellRowMatches.push(this.generateCellRowMatchesFunction(this.patterns[i],this.isEllipsis[i]));
-	}
-	/* TODO: eliminate isRigid, groupNumber, isRandom
-	from this class by moving them up into a RuleGroup class */
+  this.direction = rule[0];     /* direction rule scans in */
+  this.patterns = rule[1];    /* lists of CellPatterns to match */
+  this.hasReplacements = rule[2];
+  this.lineNumber = rule[3];    /* rule source for debugging */
+  this.isEllipsis = rule[4];    /* true if pattern has ellipsis */
+  this.groupNumber = rule[5];   /* execution group number of rule */
+  this.isRigid = rule[6];
+  this.commands = rule[7];    /* cancel, restart, sfx, etc */
+  this.isRandom = rule[8];
+  this.cellRowMasks = rule[9];
+  this.isGlobal = rule[10]
+  this.cellRowMatches = [];
+  for (var i=0;i<this.patterns.length;i++) {
+    this.cellRowMatches.push(this.generateCellRowMatchesFunction(this.patterns[i],this.isEllipsis[i]));
+  }
+  /* TODO: eliminate isRigid, groupNumber, isRandom
+  from this class by moving them up into a RuleGroup class */
 }
 
 
 Rule.prototype.generateCellRowMatchesFunction = function(cellRow,hasEllipsis)  {
-	if (hasEllipsis==false) {
-		var delta = dirMasksDelta[this.direction];
-		var d0 = delta[0];
-		var d1 = delta[1];
-		var cr_l = cellRow.length;
+  if (hasEllipsis==false) {
+    var delta = dirMasksDelta[this.direction];
+    var d0 = delta[0];
+    var d1 = delta[1];
+    var cr_l = cellRow.length;
 
-			/*
-			hard substitute in the first one - if I substitute in all of them, firefox chokes.
-			*/
-		var fn = "var d = "+d1+"+"+d0+"*level.height;\n";
-		var mul = STRIDE_OBJ === 1 ? '' : '*'+STRIDE_OBJ;	
-		for (var i = 0; i < STRIDE_OBJ; ++i) {
-			fn += 'var cellObjects' + i + ' = level.objects[i' + mul + (i ? '+'+i: '') + '];\n';
-		}
-		mul = STRIDE_MOV === 1 ? '' : '*'+STRIDE_MOV;
-		for (var i = 0; i < STRIDE_MOV; ++i) {
-			fn += 'var cellMovements' + i + ' = level.movements[i' + mul + (i ? '+'+i: '') + '];\n';
-		}
-		fn += "return "+cellRow[0].generateMatchString('0_');// cellRow[0].matches(i)";
-		for (var cellIndex=1;cellIndex<cr_l;cellIndex++) {
-			fn+="&&cellRow["+cellIndex+"].matches((i+"+cellIndex+"*d))";
-		}
-		fn+=";";
+      /*
+      hard substitute in the first one - if I substitute in all of them, firefox chokes.
+      */
+    var fn = "var d = "+d1+"+"+d0+"*level.height;\n";
+    var mul = STRIDE_OBJ === 1 ? '' : '*'+STRIDE_OBJ; 
+    for (var i = 0; i < STRIDE_OBJ; ++i) {
+      fn += 'var cellObjects' + i + ' = level.objects[i' + mul + (i ? '+'+i: '') + '];\n';
+    }
+    mul = STRIDE_MOV === 1 ? '' : '*'+STRIDE_MOV;
+    for (var i = 0; i < STRIDE_MOV; ++i) {
+      fn += 'var cellMovements' + i + ' = level.movements[i' + mul + (i ? '+'+i: '') + '];\n';
+    }
+    fn += "return "+cellRow[0].generateMatchString('0_');// cellRow[0].matches(i)";
+    for (var cellIndex=1;cellIndex<cr_l;cellIndex++) {
+      fn+="&&cellRow["+cellIndex+"].matches((i+"+cellIndex+"*d))";
+    }
+    fn+=";";
 
-		if (fn in matchCache) {
-			return matchCache[fn];
-		}
-		//console.log(fn.replace(/\s+/g, ' '));
-		return matchCache[fn] = new Function("cellRow","i",fn);
-	} else {
-		var delta = dirMasksDelta[this.direction];
-		var d0 = delta[0];
-		var d1 = delta[1];
-		var cr_l = cellRow.length;
-
-
-		var fn = "var d = "+d1+"+"+d0+"*level.height;\n";
-		fn += "var result = [];\n"
-		fn += "if(cellRow[0].matches(i)";
-		var cellIndex=1;
-		for (;cellRow[cellIndex]!==ellipsisPattern;cellIndex++) {
-			fn+="&&cellRow["+cellIndex+"].matches((i+"+cellIndex+"*d))";
-		}
-		cellIndex++;
-		fn+=") {\n";
-		fn+="\tfor (var k=kmin;k<kmax;k++) {\n"
-		fn+="\t\tif(cellRow["+cellIndex+"].matches((i+d*(k+"+(cellIndex-1)+")))";
-		cellIndex++;
-		for (;cellIndex<cr_l;cellIndex++) {
-			fn+="&&cellRow["+cellIndex+"].matches((i+d*(k+"+(cellIndex-1)+")))";			
-		}
-		fn+="){\n";
-		fn+="\t\t\tresult.push([i,k]);\n";
-		fn+="\t\t}\n"
-		fn+="\t}\n";				
-		fn+="}\n";		
-		fn+="return result;"
+    if (fn in matchCache) {
+      return matchCache[fn];
+    }
+    //console.log(fn.replace(/\s+/g, ' '));
+    return matchCache[fn] = new Function("cellRow","i",fn);
+  } else {
+    var delta = dirMasksDelta[this.direction];
+    var d0 = delta[0];
+    var d1 = delta[1];
+    var cr_l = cellRow.length;
 
 
-		if (fn in matchCache) {
-			return matchCache[fn];
-		}
-		//console.log(fn.replace(/\s+/g, ' '));
-		return matchCache[fn] = new Function("cellRow","i","kmax","kmin",fn);
-	}
+    var fn = "var d = "+d1+"+"+d0+"*level.height;\n";
+    fn += "var result = [];\n"
+    fn += "if(cellRow[0].matches(i)";
+    var cellIndex=1;
+    for (;cellRow[cellIndex]!==ellipsisPattern;cellIndex++) {
+      fn+="&&cellRow["+cellIndex+"].matches((i+"+cellIndex+"*d))";
+    }
+    cellIndex++;
+    fn+=") {\n";
+    fn+="\tfor (var k=kmin;k<kmax;k++) {\n"
+    fn+="\t\tif(cellRow["+cellIndex+"].matches((i+d*(k+"+(cellIndex-1)+")))";
+    cellIndex++;
+    for (;cellIndex<cr_l;cellIndex++) {
+      fn+="&&cellRow["+cellIndex+"].matches((i+d*(k+"+(cellIndex-1)+")))";      
+    }
+    fn+="){\n";
+    fn+="\t\t\tresult.push([i,k]);\n";
+    fn+="\t\t}\n"
+    fn+="\t}\n";        
+    fn+="}\n";    
+    fn+="return result;"
+
+
+    if (fn in matchCache) {
+      return matchCache[fn];
+    }
+    //console.log(fn.replace(/\s+/g, ' '));
+    return matchCache[fn] = new Function("cellRow","i","kmax","kmin",fn);
+  }
 //say cellRow has length 3, with a split in the middle
 /*
 function cellRowMatchesWildcardFunctionGenerate(direction,cellRow,i, maxk, mink) {
-
-	var result = [];
-	var matchfirsthalf = cellRow[0].matches(i);
-	if (matchfirsthalf) {
-		for (var k=mink;k<maxk;k++) {
-			if (cellRow[2].matches((i+d*(k+0)))) {
-				result.push([i,k]);
-			}
-		}
-	}
-	return result;
+  var result = [];
+  var matchfirsthalf = cellRow[0].matches(i);
+  if (matchfirsthalf) {
+    for (var k=mink;k<maxk;k++) {
+      if (cellRow[2].matches((i+d*(k+0)))) {
+        result.push([i,k]);
+      }
+    }
+  }
+  return result;
 }
 */
-	
+  
 
 }
 
 
 Rule.prototype.toJSON = function() {
-	/* match construction order for easy deserialization */
-	return [
-		this.direction, this.patterns, this.hasReplacements, this.lineNumber, this.isEllipsis,
-		this.groupNumber, this.isRigid, this.commands, this.isRandom, this.cellRowMasks
-	];
+  /* match construction order for easy deserialization */
+  return [
+    this.direction, this.patterns, this.hasReplacements, this.lineNumber, this.isEllipsis,
+    this.groupNumber, this.isRigid, this.commands, this.isRandom, this.cellRowMasks, this.isGlobal
+  ];
 };
 
 var STRIDE_OBJ = 1;
 var STRIDE_MOV = 1;
 
 function CellPattern(row) {
-	this.objectsPresent = row[0];
-	this.objectsMissing = row[1];
-	this.anyObjectsPresent = row[2];
-	this.movementsPresent = row[3];
-	this.movementsMissing = row[4];
-	this.matches = this.generateMatchFunction();
-	this.replacement = row[5];
+  this.objectsPresent = row[0];
+  this.objectsMissing = row[1];
+  this.anyObjectsPresent = row[2];
+  this.movementsPresent = row[3];
+  this.movementsMissing = row[4];
+  this.matches = this.generateMatchFunction();
+  this.replacement = row[5];
 };
 
 function CellReplacement(row) {
-	this.objectsClear = row[0];
-	this.objectsSet = row[1];
-	this.movementsClear = row[2];
-	this.movementsSet = row[3];
-	this.movementsLayerMask = row[4];
-	this.randomEntityMask = row[5];
-	this.randomDirMask = row[6];
+  this.objectsClear = row[0];
+  this.objectsSet = row[1];
+  this.movementsClear = row[2];
+  this.movementsSet = row[3];
+  this.movementsLayerMask = row[4];
+  this.randomEntityMask = row[5];
+  this.randomDirMask = row[6];
 };
 
 
@@ -1406,210 +1689,209 @@ var matchCache = {};
 
 
 CellPattern.prototype.generateMatchString = function() {
-	var fn = "(true";
-	for (var i = 0; i < Math.max(STRIDE_OBJ, STRIDE_MOV); ++i) {
-		var co = 'cellObjects' + i;
-		var cm = 'cellMovements' + i;
-		var op = this.objectsPresent.data[i];
-		var om = this.objectsMissing.data[i];
-		var mp = this.movementsPresent.data[i];
-		var mm = this.movementsMissing.data[i];
-		if (op) {
-			if (op&(op-1))
-				fn += '\t\t&& ((' + co + '&' + op + ')===' + op + ')\n';
-			else
-				fn += '\t\t&& (' + co + '&' + op + ')\n';
-		}
-		if (om)
-			fn += '\t\t&& !(' + co + '&' + om + ')\n';
-		if (mp) {
-			if (mp&(mp-1))
-				fn += '\t\t&& ((' + cm + '&' + mp + ')===' + mp + ')\n';
-			else
-				fn += '\t\t&& (' + cm + '&' + mp + ')\n';
-		}
-		if (mm)
-			fn += '\t\t&& !(' + cm + '&' + mm + ')\n';
-	}
-	for (var j = 0; j < this.anyObjectsPresent.length; j++) {
-		fn += "\t\t&& (0";
-		for (var i = 0; i < STRIDE_OBJ; ++i) {
-			var aop = this.anyObjectsPresent[j].data[i];
-			if (aop)
-				fn += "|(cellObjects" + i + "&" + aop + ")";
-		}
-		fn += ")";
-	}
-	fn += '\t)';
-	return fn;
+  var fn = "(true";
+  for (var i = 0; i < Math.max(STRIDE_OBJ, STRIDE_MOV); ++i) {
+    var co = 'cellObjects' + i;
+    var cm = 'cellMovements' + i;
+    var op = this.objectsPresent.data[i];
+    var om = this.objectsMissing.data[i];
+    var mp = this.movementsPresent.data[i];
+    var mm = this.movementsMissing.data[i];
+    if (op) {
+      if (op&(op-1))
+        fn += '\t\t&& ((' + co + '&' + op + ')===' + op + ')\n';
+      else
+        fn += '\t\t&& (' + co + '&' + op + ')\n';
+    }
+    if (om)
+      fn += '\t\t&& !(' + co + '&' + om + ')\n';
+    if (mp) {
+      if (mp&(mp-1))
+        fn += '\t\t&& ((' + cm + '&' + mp + ')===' + mp + ')\n';
+      else
+        fn += '\t\t&& (' + cm + '&' + mp + ')\n';
+    }
+    if (mm)
+      fn += '\t\t&& !(' + cm + '&' + mm + ')\n';
+  }
+  for (var j = 0; j < this.anyObjectsPresent.length; j++) {
+    fn += "\t\t&& (0";
+    for (var i = 0; i < STRIDE_OBJ; ++i) {
+      var aop = this.anyObjectsPresent[j].data[i];
+      if (aop)
+        fn += "|(cellObjects" + i + "&" + aop + ")";
+    }
+    fn += ")";
+  }
+  fn += '\t)';
+  return fn;
 }
 
 CellPattern.prototype.generateMatchFunction = function() {
-	var i;
-	var fn = '';
-	var mul = STRIDE_OBJ === 1 ? '' : '*'+STRIDE_OBJ;	
-	for (var i = 0; i < STRIDE_OBJ; ++i) {
-		fn += '\tvar cellObjects' + i + ' = level.objects[i' + mul + (i ? '+'+i: '') + '];\n';
-	}
-	mul = STRIDE_MOV === 1 ? '' : '*'+STRIDE_MOV;
-	for (var i = 0; i < STRIDE_MOV; ++i) {
-		fn += '\tvar cellMovements' + i + ' = level.movements[i' + mul + (i ? '+'+i: '') + '];\n';
-	}
-	fn += "return " + this.generateMatchString()+';';
-	if (fn in matchCache) {
-		return matchCache[fn];
-	}
-	//console.log(fn.replace(/\s+/g, ' '));
-	return matchCache[fn] = new Function("i",fn);
+  var i;
+  var fn = '';
+  var mul = STRIDE_OBJ === 1 ? '' : '*'+STRIDE_OBJ; 
+  for (var i = 0; i < STRIDE_OBJ; ++i) {
+    fn += '\tvar cellObjects' + i + ' = level.objects[i' + mul + (i ? '+'+i: '') + '];\n';
+  }
+  mul = STRIDE_MOV === 1 ? '' : '*'+STRIDE_MOV;
+  for (var i = 0; i < STRIDE_MOV; ++i) {
+    fn += '\tvar cellMovements' + i + ' = level.movements[i' + mul + (i ? '+'+i: '') + '];\n';
+  }
+  fn += "return " + this.generateMatchString()+';';
+  if (fn in matchCache) {
+    return matchCache[fn];
+  }
+  //console.log(fn.replace(/\s+/g, ' '));
+  return matchCache[fn] = new Function("i",fn);
 }
 
 CellPattern.prototype.toJSON = function() {
-	return [
-		this.movementMask, this.cellMask, this.nonExistenceMask,
-		this.moveNonExistenceMask, this.moveStationaryMask, this.randomDirOrEntityMask,
-		this.movementsToRemove
-	];
+  return [
+    this.movementMask, this.cellMask, this.nonExistenceMask,
+    this.moveNonExistenceMask, this.moveStationaryMask, this.randomDirOrEntityMask,
+    this.movementsToRemove
+  ];
 };
 
 var _o1,_o2,_o2_5,_o3,_o4,_o5,_o6,_o7,_o8,_o9,_o10,_o11,_o12;
 var _m1,_m2,_m3;
 
 CellPattern.prototype.replace = function(rule, currentIndex) {
-	var replace = this.replacement;
+  var replace = this.replacement;
 
-	if (replace === null) {
-		return false;
-	}
+  if (replace === null) {
+    return false;
+  }
 
-	var replace_RandomEntityMask = replace.randomEntityMask;
-	var replace_RandomDirMask = replace.randomDirMask;
+  var replace_RandomEntityMask = replace.randomEntityMask;
+  var replace_RandomDirMask = replace.randomDirMask;
 
-	var objectsSet = replace.objectsSet.cloneInto(_o1);
-	var objectsClear = replace.objectsClear.cloneInto(_o2);
+  var objectsSet = replace.objectsSet.cloneInto(_o1);
+  var objectsClear = replace.objectsClear.cloneInto(_o2);
 
-	var movementsSet = replace.movementsSet.cloneInto(_m1);
-	var movementsClear = replace.movementsClear.cloneInto(_m2);
-	movementsClear.ior(replace.movementsLayerMask);
+  var movementsSet = replace.movementsSet.cloneInto(_m1);
+  var movementsClear = replace.movementsClear.cloneInto(_m2);
+  movementsClear.ior(replace.movementsLayerMask);
 
-	if (!replace_RandomEntityMask.iszero()) {
-		var choices=[];
-		for (var i=0;i<32*STRIDE_OBJ;i++) {
-			if (replace_RandomEntityMask.get(i)) {
-				choices.push(i);
-			}
-		}
-		var rand = choices[Math.floor(RandomGen.uniform() * choices.length)];
-		var n = state.idDict[rand];
-		var o = state.objects[n];
-		objectsSet.ibitset(rand);
-		objectsClear.ior(state.layerMasks[o.layer]);
-		movementsClear.ishiftor(0x1f, 5 * o.layer);
-	}
-	if (!replace_RandomDirMask.iszero()) {
-		for (var layerIndex=0;layerIndex<level.layerCount;layerIndex++){
-			if (replace_RandomDirMask.get(5*layerIndex)) {
-				var randomDir = Math.floor(RandomGen.uniform()*4);
-				movementsSet.ibitset(randomDir + 5 * layerIndex);
-			}
-		}
-	}
-	
-	var curCellMask = level.getCellInto(currentIndex,_o2_5);
-	var curMovementMask = level.getMovements(currentIndex);
+  if (!replace_RandomEntityMask.iszero()) {
+    var choices=[];
+    for (var i=0;i<32*STRIDE_OBJ;i++) {
+      if (replace_RandomEntityMask.get(i)) {
+        choices.push(i);
+      }
+    }
+    var rand = choices[Math.floor(RandomGen.uniform() * choices.length)];
+    var n = state.idDict[rand];
+    var o = state.objects[n];
+    objectsSet.ibitset(rand);
+    objectsClear.ior(state.layerMasks[o.layer]);
+    movementsClear.ishiftor(0x1f, 5 * o.layer);
+  }
+  if (!replace_RandomDirMask.iszero()) {
+    for (var layerIndex=0;layerIndex<level.layerCount;layerIndex++){
+      if (replace_RandomDirMask.get(5*layerIndex)) {
+        var randomDir = Math.floor(RandomGen.uniform()*4);
+        movementsSet.ibitset(randomDir + 5 * layerIndex);
+      }
+    }
+  }
+  
+  var curCellMask = level.getCellInto(currentIndex,_o2_5);
+  var curMovementMask = level.getMovements(currentIndex);
 
-	var oldCellMask = curCellMask.cloneInto(_o3);
-	var oldMovementMask = curMovementMask.cloneInto(_m3);
+  var oldCellMask = curCellMask.cloneInto(_o3);
+  var oldMovementMask = curMovementMask.cloneInto(_m3);
 
-	curCellMask.iclear(objectsClear);
-	curCellMask.ior(objectsSet);
+  curCellMask.iclear(objectsClear);
+  curCellMask.ior(objectsSet);
 
-	curMovementMask.iclear(movementsClear);
-	curMovementMask.ior(movementsSet);
+  curMovementMask.iclear(movementsClear);
+  curMovementMask.ior(movementsSet);
 
-	var rigidchange=false;
-	var curRigidGroupIndexMask =0;
-	var curRigidMovementAppliedMask =0;
-	if (rule.isRigid) {
-		var rigidGroupIndex = state.groupNumber_to_RigidGroupIndex[rule.groupNumber];
-		rigidGroupIndex++;//don't forget to -- it when decoding :O
-		var rigidMask = new BitVec(STRIDE_MOV);
-		for (var layer = 0; layer < level.layerCount; layer++) {
-			rigidMask.ishiftor(rigidGroupIndex, layer * 5);
-		}
-		rigidMask.iand(replace.movementsLayerMask);
-		curRigidGroupIndexMask = level.rigidGroupIndexMask[currentIndex] || new BitVec(STRIDE_MOV);
-		curRigidMovementAppliedMask = level.rigidMovementAppliedMask[currentIndex] || new BitVec(STRIDE_MOV);
+  var rigidchange=false;
+  var curRigidGroupIndexMask =0;
+  var curRigidMovementAppliedMask =0;
+  if (rule.isRigid) {
+    var rigidGroupIndex = state.groupNumber_to_RigidGroupIndex[rule.groupNumber];
+    rigidGroupIndex++;//don't forget to -- it when decoding :O
+    var rigidMask = new BitVec(STRIDE_MOV);
+    for (var layer = 0; layer < level.layerCount; layer++) {
+      rigidMask.ishiftor(rigidGroupIndex, layer * 5);
+    }
+    rigidMask.iand(replace.movementsLayerMask);
+    curRigidGroupIndexMask = level.rigidGroupIndexMask[currentIndex] || new BitVec(STRIDE_MOV);
+    curRigidMovementAppliedMask = level.rigidMovementAppliedMask[currentIndex] || new BitVec(STRIDE_MOV);
 
-		if (!rigidMask.bitsSetInArray(curRigidGroupIndexMask.data) &&
-			!replace.movementsLayerMask.bitsSetInArray(curRigidMovementAppliedMask.data) ) {
-			curRigidGroupIndexMask.ior(rigidMask);
-			curRigidMovementAppliedMask.ior(replace.movementsLayerMask);
-			rigidchange=true;
+    if (!rigidMask.bitsSetInArray(curRigidGroupIndexMask.data) &&
+      !replace.movementsLayerMask.bitsSetInArray(curRigidMovementAppliedMask.data) ) {
+      curRigidGroupIndexMask.ior(rigidMask);
+      curRigidMovementAppliedMask.ior(replace.movementsLayerMask);
+      rigidchange=true;
 
-		}
-	}
+    }
+  }
 
-	var result = false;
+  var result = false;
 
-	//check if it's changed
-	if (!oldCellMask.equals(curCellMask) || !oldMovementMask.equals(curMovementMask) || rigidchange) { 
-		result=true;
-		if (rigidchange) {
-			level.rigidGroupIndexMask[currentIndex] = curRigidGroupIndexMask;
-			level.rigidMovementAppliedMask[currentIndex] = curRigidMovementAppliedMask;
-		}
+  //check if it's changed
+  if (!oldCellMask.equals(curCellMask) || !oldMovementMask.equals(curMovementMask) || rigidchange) { 
+    result=true;
+    if (rigidchange) {
+      level.rigidGroupIndexMask[currentIndex] = curRigidGroupIndexMask;
+      level.rigidMovementAppliedMask[currentIndex] = curRigidMovementAppliedMask;
+    }
 
-		var created = curCellMask.cloneInto(_o4);
-		created.iclear(oldCellMask);
-		sfxCreateMask.ior(created);
-		var destroyed = oldCellMask.cloneInto(_o5);
-		destroyed.iclear(curCellMask);
-		sfxDestroyMask.ior(destroyed);
+    var created = curCellMask.cloneInto(_o4);
+    created.iclear(oldCellMask);
+    sfxCreateMask.ior(created);
+    var destroyed = oldCellMask.cloneInto(_o5);
+    destroyed.iclear(curCellMask);
+    sfxDestroyMask.ior(destroyed);
 
-		level.setCell(currentIndex, curCellMask);
-		level.setMovements(currentIndex, curMovementMask);
+    level.setCell(currentIndex, curCellMask);
+    level.setMovements(currentIndex, curMovementMask);
 
-		var colIndex=(currentIndex/level.height)|0;
-		var rowIndex=(currentIndex%level.height);
-		level.colCellContents[colIndex].ior(curCellMask);
-		level.rowCellContents[rowIndex].ior(curCellMask);
-		level.mapCellContents.ior(curCellMask);
-	}
+    var colIndex=(currentIndex/level.height)|0;
+    var rowIndex=(currentIndex%level.height);
+    level.colCellContents[colIndex].ior(curCellMask);
+    level.rowCellContents[rowIndex].ior(curCellMask);
+    level.mapCellContents.ior(curCellMask);
+  }
 
-	return result;
+  return result;
 }
 
 
 //say cellRow has length 5, with a split in the middle
 /*
 function cellRowMatchesWildcardFunctionGenerate(direction,cellRow,i, maxk, mink) {
-
-	var result = [];
-	var matchfirsthalf = cellRow[0].matches(i)&&cellRow[1].matches((i+d)%level.n_tiles);
-	if (matchfirsthalf) {
-		for (var k=mink,kmaxk;k++) {
-			if (cellRow[2].matches((i+d*(k+0))%level.n_tiles)&&cellRow[2].matches((i+d*(k+1))%level.n_tiles)) {
-				result.push([i,k]);
-			}
-		}
-	}
-	return result;
+  var result = [];
+  var matchfirsthalf = cellRow[0].matches(i)&&cellRow[1].matches((i+d)%level.n_tiles);
+  if (matchfirsthalf) {
+    for (var k=mink,kmaxk;k++) {
+      if (cellRow[2].matches((i+d*(k+0))%level.n_tiles)&&cellRow[2].matches((i+d*(k+1))%level.n_tiles)) {
+        result.push([i,k]);
+      }
+    }
+  }
+  return result;
 }
 */
 
 function DoesCellRowMatchWildCard(direction,cellRow,i,maxk,mink) {
-	if (mink === undefined) {
-		mink = 0;
-	}
+  if (mink === undefined) {
+    mink = 0;
+  }
 
-	var cellPattern = cellRow[0];
+  var cellPattern = cellRow[0];
 
     //var result=[];
 
     if (cellPattern.matches(i)){
-    	var delta = dirMasksDelta[direction];
-    	var d0 = delta[0]*level.height;
-		var d1 = delta[1];
+      var delta = dirMasksDelta[direction];
+      var d0 = delta[0]*level.height;
+    var d1 = delta[1];
         var targetIndex = i;
 
         for (var j=1;j<cellRow.length;j+=1) {
@@ -1617,26 +1899,26 @@ function DoesCellRowMatchWildCard(direction,cellRow,i,maxk,mink) {
 
             var cellPattern = cellRow[j]
             if (cellPattern === ellipsisPattern) {
-            	//BAM inner loop time
-            	for (var k=mink;k<maxk;k++) {
-            		var targetIndex2=targetIndex;
+              //BAM inner loop time
+              for (var k=mink;k<maxk;k++) {
+                var targetIndex2=targetIndex;
                     targetIndex2 = (targetIndex2+(d1+d0)*(k)+level.n_tiles)%level.n_tiles;
-            		for (var j2=j+1;j2<cellRow.length;j2++) {
-		                cellPattern = cellRow[j2];
-					    if (!cellPattern.matches(targetIndex2)) {
-					    	break;
-					    }
+                for (var j2=j+1;j2<cellRow.length;j2++) {
+                    cellPattern = cellRow[j2];
+              if (!cellPattern.matches(targetIndex2)) {
+                break;
+              }
                         targetIndex2 = (targetIndex2+d1+d0);
-            		}
+                }
 
-		            if (j2>=cellRow.length) {
-		            	return true;
-		                //result.push([i,k]);
-		            }
-            	}
-            	break;
+                if (j2>=cellRow.length) {
+                  return true;
+                    //result.push([i,k]);
+                }
+              }
+              break;
             } else if (!cellPattern.matches(targetIndex)) {
-				break;
+        break;
             }
         }               
     }  
@@ -1647,30 +1929,30 @@ function DoesCellRowMatchWildCard(direction,cellRow,i,maxk,mink) {
 /*
 CellRow Matches can be specialized to look something like:
 function cellRowMatchesFunctionGenerate(direction,cellRow,i) {
-	var delta = dirMasksDelta[direction];
-	var d = delta[1]+delta[0]*level.height;
-	return cellRow[0].matches(i)&&cellRow[1].matches((i+d)%level.n_tiles)&&cellRow[2].matches((i+2*d)%level.n_tiles);
+  var delta = dirMasksDelta[direction];
+  var d = delta[1]+delta[0]*level.height;
+  return cellRow[0].matches(i)&&cellRow[1].matches((i+d)%level.n_tiles)&&cellRow[2].matches((i+2*d)%level.n_tiles);
 }
 */
 
 function DoesCellRowMatch(direction,cellRow,i,k) {
-	var cellPattern = cellRow[0];
+  var cellPattern = cellRow[0];
     if (cellPattern.matches(i)) {
 
-	    var delta = dirMasksDelta[direction];
-	    var d0 = delta[0]*level.height;
-		var d1 = delta[1];
-		var cr_l = cellRow.length;
+      var delta = dirMasksDelta[direction];
+      var d0 = delta[0]*level.height;
+    var d1 = delta[1];
+    var cr_l = cellRow.length;
 
         var targetIndex = i;
         for (var j=1;j<cr_l;j++) {
             targetIndex = (targetIndex+d1+d0);
             cellPattern = cellRow[j];
-			if (cellPattern === ellipsisPattern) {
-					//only for once off verifications
-            	targetIndex = (targetIndex+(d1+d0)*k); 					
+      if (cellPattern === ellipsisPattern) {
+          //only for once off verifications
+              targetIndex = (targetIndex+(d1+d0)*k);          
             }
-		    if (!cellPattern.matches(targetIndex)) {
+        if (!cellPattern.matches(targetIndex)) {
                 break;
             }
         }   
@@ -1683,167 +1965,177 @@ function DoesCellRowMatch(direction,cellRow,i,k) {
     return false;
 }
 
-function matchCellRow(direction, cellRowMatch, cellRow, cellRowMask) {	
-	var result=[];
-	
-	if ((!cellRowMask.bitsSetInArray(level.mapCellContents.data))) {
-		return result;
-	}
+function matchCellRow(direction, cellRowMatch, cellRow, cellRowMask, isGlobal) {  
+  var result=[];
+  
+  if ((!cellRowMask.bitsSetInArray(level.mapCellContents.data))) {
+    return result;
+  }
+  var xmin, xmax, ymin, ymax;
+  if(isGlobal || state.metadata.local_radius === undefined){
+    xmin=0;
+    xmax=level.width;
+    ymin=0;
+    ymax=level.height;
+  }
+  else{
+    var localradius = parseInt(state.metadata.local_radius);
+    xmin=Math.max(0, (playerPositions[0]/level.height|0) - localradius);
+    xmax=Math.min(level.width, (playerPositions[0]/level.height|0) + localradius +1);
+    ymin=Math.max(0, playerPositions[0]%level.height - localradius);
+    ymax=Math.min(level.height, playerPositions[0]%level.height + localradius+1);
 
-	var xmin=0;
-	var xmax=level.width;
-	var ymin=0;
-	var ymax=level.height;
+  }
 
     var len=cellRow.length;
 
     switch(direction) {
-    	case 1://up
-    	{
-    		ymin+=(len-1);
-    		break;
-    	}
-    	case 2: //down 
-    	{
-			ymax-=(len-1);
-			break;
-    	}
-    	case 4: //left
-    	{
-    		xmin+=(len-1);
-    		break;
-    	}
-    	case 8: //right
-		{
-			xmax-=(len-1);	
-			break;
-		}
-    	default:
-    	{
-    		window.console.log("EEEP "+direction);
-    	}
+      case 1://up
+      {
+        ymin+=(len-1);
+        break;
+      }
+      case 2: //down 
+      {
+      ymax-=(len-1);
+      break;
+      }
+      case 4: //left
+      {
+        xmin+=(len-1);
+        break;
+      }
+      case 8: //right
+    {
+      xmax-=(len-1);  
+      break;
+    }
+      default:
+      {
+        window.console.log("EEEP "+direction);
+      }
     }
 
     var horizontal=direction>2;
     if (horizontal) {
-		for (var y=ymin;y<ymax;y++) {
-			if (!cellRowMask.bitsSetInArray(level.rowCellContents[y].data)) {
-				continue;
-			}
+    for (var y=ymin;y<ymax;y++) {
+      if (!cellRowMask.bitsSetInArray(level.rowCellContents[y].data)) {
+        continue;
+      }
 
-			for (var x=xmin;x<xmax;x++) {
-				var i = x*level.height+y;
-				if (cellRowMatch(cellRow,i))
-				{
-					result.push(i);
-				}
-			}
-		}
-	} else {
-		for (var x=xmin;x<xmax;x++) {
-			if (!cellRowMask.bitsSetInArray(level.colCellContents[x].data)) {
-				continue;
-			}
+      for (var x=xmin;x<xmax;x++) {
+        var i = x*level.height+y;
+        if (cellRowMatch(cellRow,i))
+        {
+          result.push(i);
+        }
+      }
+    }
+  } else {
+    for (var x=xmin;x<xmax;x++) {
+      if (!cellRowMask.bitsSetInArray(level.colCellContents[x].data)) {
+        continue;
+      }
 
-			for (var y=ymin;y<ymax;y++) {
-				var i = x*level.height+y;
-				if (cellRowMatch(	cellRow,i))
-				{
-					result.push(i);
-				}
-			}
-		}		
-	}
+      for (var y=ymin;y<ymax;y++) {
+        var i = x*level.height+y;
+        if (cellRowMatch( cellRow,i))
+        {
+          result.push(i);
+        }
+      }
+    }   
+  }
 
-	return result;
+  return result;
 }
 
 
 function matchCellRowWildCard(direction, cellRowMatch, cellRow,cellRowMask) {
-	var result=[];
-	if ((!cellRowMask.bitsSetInArray(level.mapCellContents.data))) {
-		return result;
-	}
-	var xmin=0;
-	var xmax=level.width;
-	var ymin=0;
-	var ymax=level.height;
+  var result=[];
+  if ((!cellRowMask.bitsSetInArray(level.mapCellContents.data))) {
+    return result;
+  }
+  var xmin=0;
+  var xmax=level.width;
+  var ymin=0;
+  var ymax=level.height;
 
-	var len=cellRow.length-1;//remove one to deal with wildcard
+  var len=cellRow.length-1;//remove one to deal with wildcard
     switch(direction) {
-    	case 1://up
-    	{
-    		ymin+=(len-1);
-    		break;
-    	}
-    	case 2: //down 
-    	{
-			ymax-=(len-1);
-			break;
-    	}
-    	case 4: //left
-    	{
-    		xmin+=(len-1);
-    		break;
-    	}
-    	case 8: //right
-		{
-			xmax-=(len-1);	
-			break;
-		}
-    	default:
-    	{
-    		window.console.log("EEEP2 "+direction);
-    	}
+      case 1://up
+      {
+        ymin+=(len-1);
+        break;
+      }
+      case 2: //down 
+      {
+      ymax-=(len-1);
+      break;
+      }
+      case 4: //left
+      {
+        xmin+=(len-1);
+        break;
+      }
+      case 8: //right
+    {
+      xmax-=(len-1);  
+      break;
+    }
+      default:
+      {
+        window.console.log("EEEP2 "+direction);
+      }
     }
 
 
 
     var horizontal=direction>2;
     if (horizontal) {
-		for (var y=ymin;y<ymax;y++) {
-			if (!cellRowMask.bitsSetInArray(level.rowCellContents[y].data)) {
-				continue;
-			}
+    for (var y=ymin;y<ymax;y++) {
+      if (!cellRowMask.bitsSetInArray(level.rowCellContents[y].data)) {
+        continue;
+      }
 
-			for (var x=xmin;x<xmax;x++) {
-				var i = x*level.height+y;
-				var kmax;
+      for (var x=xmin;x<xmax;x++) {
+        var i = x*level.height+y;
+        var kmax;
 
-				if (direction === 4) { //left
-					kmax=x-len+2;
-				} else if (direction === 8) { //right
-					kmax=level.width-(x+len)+1;	
-				} else {
-					window.console.log("EEEP2 "+direction);					
-				}
+        if (direction === 4) { //left
+          kmax=x-len+2;
+        } else if (direction === 8) { //right
+          kmax=level.width-(x+len)+1; 
+        } else {
+          window.console.log("EEEP2 "+direction);         
+        }
 
-				result.push.apply(result, cellRowMatch(cellRow,i,kmax,0));
-			}
-		}
-	} else {
-		for (var x=xmin;x<xmax;x++) {
-			if (!cellRowMask.bitsSetInArray(level.colCellContents[x].data)) {
-				continue;
-			}
+        result.push.apply(result, cellRowMatch(cellRow,i,kmax,0));
+      }
+    }
+  } else {
+    for (var x=xmin;x<xmax;x++) {
+      if (!cellRowMask.bitsSetInArray(level.colCellContents[x].data)) {
+        continue;
+      }
 
-			for (var y=ymin;y<ymax;y++) {
-				var i = x*level.height+y;
-				var kmax;
+      for (var y=ymin;y<ymax;y++) {
+        var i = x*level.height+y;
+        var kmax;
 
-				if (direction === 2) { // down
-					kmax=level.height-(y+len)+1;
-				} else if (direction === 1) { // up
-					kmax=y-len+2;					
-				} else {
-					window.console.log("EEEP2 "+direction);
-				}
-				result.push.apply(result, cellRowMatch(cellRow,i,kmax,0));
-			}
-		}		
-	}
+        if (direction === 2) { // down
+          kmax=level.height-(y+len)+1;
+        } else if (direction === 1) { // up
+          kmax=y-len+2;         
+        } else {
+          window.console.log("EEEP2 "+direction);
+        }
+        result.push.apply(result, cellRowMatch(cellRow,i,kmax,0));
+      }
+    }   
+  }
 
-	return result;
+  return result;
 }
 
 function generateTuples(lists) {
@@ -1869,45 +2161,45 @@ function generateTuples(lists) {
 var rigidBackups=[]
 
 function commitPreservationState(ruleGroupIndex) {
-	var propagationState = {
-		ruleGroupIndex:ruleGroupIndex,
-		objects:new Int32Array(level.objects),
-		movements:new Int32Array(level.movements),
-		rigidGroupIndexMask:level.rigidGroupIndexMask.concat([]),
-		rigidMovementAppliedMask:level.rigidMovementAppliedMask.concat([]),
-		bannedGroup:level.bannedGroup.concat([]),
-		commandQueue:level.commandQueue.concat([]),
-		commandQueueSourceRules:level.commandQueueSourceRules.concat([])
-	};
-	rigidBackups[ruleGroupIndex]=propagationState;
-	return propagationState;
+  var propagationState = {
+    ruleGroupIndex:ruleGroupIndex,
+    objects:new Int32Array(level.objects),
+    movements:new Int32Array(level.movements),
+    rigidGroupIndexMask:level.rigidGroupIndexMask.concat([]),
+    rigidMovementAppliedMask:level.rigidMovementAppliedMask.concat([]),
+    bannedGroup:level.bannedGroup.concat([]),
+    commandQueue:level.commandQueue.concat([]),
+    commandQueueSourceRules:level.commandQueueSourceRules.concat([])
+  };
+  rigidBackups[ruleGroupIndex]=propagationState;
+  return propagationState;
 }
 
 function restorePreservationState(preservationState) {;
 //don't need to concat or anythign here, once something is restored it won't be used again.
-	level.objects = new Int32Array(preservationState.objects);
-	level.movements = new Int32Array(preservationState.movements);
-	level.rigidGroupIndexMask = preservationState.rigidGroupIndexMask.concat([]);
+  level.objects = new Int32Array(preservationState.objects);
+  level.movements = new Int32Array(preservationState.movements);
+  level.rigidGroupIndexMask = preservationState.rigidGroupIndexMask.concat([]);
     level.rigidMovementAppliedMask = preservationState.rigidMovementAppliedMask.concat([]);
     level.commandQueue = preservationState.commandQueue.concat([]);
     level.commandQueueSourceRules = preservationState.commandQueueSourceRules.concat([]);
     sfxCreateMask.setZero();
     sfxDestroyMask.setZero();
-	consolePrint("Rigid movement application failed, rolling back");
+  consolePrint("Rigid movement application failed, rolling back");
 
-//	rigidBackups = preservationState.rigidBackups;
+//  rigidBackups = preservationState.rigidBackups;
 }
 
 Rule.prototype.findMatches = function() {
-	var matches=[];
-	var cellRowMasks=this.cellRowMasks;
+  var matches=[];
+  var cellRowMasks=this.cellRowMasks;
     for (var cellRowIndex=0;cellRowIndex<this.patterns.length;cellRowIndex++) {
         var cellRow = this.patterns[cellRowIndex];
         var matchFunction = this.cellRowMatches[cellRowIndex];
         if (this.isEllipsis[cellRowIndex]) {//if ellipsis     
-        	var match = matchCellRowWildCard(this.direction,matchFunction,cellRow,cellRowMasks[cellRowIndex]);  
+          var match = matchCellRowWildCard(this.direction,matchFunction,cellRow,cellRowMasks[cellRowIndex]);  
         } else {
-        	var match = matchCellRow(this.direction,matchFunction,cellRow,cellRowMasks[cellRowIndex]);               	
+          var match = matchCellRow(this.direction,matchFunction,cellRow,cellRowMasks[cellRowIndex], this.isGlobal);                
         }
         if (match.length===0) {
             return [];
@@ -1919,42 +2211,42 @@ Rule.prototype.findMatches = function() {
 };
 
 Rule.prototype.directional = function(){
-	//Check if other rules in its rulegroup with the same line number.
-	for (var i=0;i<state.rules.length;i++){
-		var rg = state.rules[i];
-		var copyCount=0;
-		for (var j=0;j<rg.length;j++){
-			if (this.lineNumber===rg[j].lineNumber){
-				copyCount++;
-			}
-			if (copyCount>1){
-				return true;
-			}
-		}
-	}
+  //Check if other rules in its rulegroup with the same line number.
+  for (var i=0;i<state.rules.length;i++){
+    var rg = state.rules[i];
+    var copyCount=0;
+    for (var j=0;j<rg.length;j++){
+      if (this.lineNumber===rg[j].lineNumber){
+        copyCount++;
+      }
+      if (copyCount>1){
+        return true;
+      }
+    }
+  }
 
     return false;
 }
 
 Rule.prototype.applyAt = function(delta,tuple,check) {
-	var rule = this;
-	//have to double check they apply
-	//Q: why?
+  var rule = this;
+  //have to double check they apply
+  //Q: why?
     if (check) {
         var ruleMatches=true;                
         for (var cellRowIndex=0;cellRowIndex<rule.patterns.length;cellRowIndex++) {
-        	if (rule.isEllipsis[cellRowIndex]) {//if ellipsis
-            	if (DoesCellRowMatchWildCard(rule.direction,rule.patterns[cellRowIndex],tuple[cellRowIndex][0],
-            		tuple[cellRowIndex][1]+1, tuple[cellRowIndex][1])===false) { /* pass mink to specify */
+          if (rule.isEllipsis[cellRowIndex]) {//if ellipsis
+              if (DoesCellRowMatchWildCard(rule.direction,rule.patterns[cellRowIndex],tuple[cellRowIndex][0],
+                tuple[cellRowIndex][1]+1, tuple[cellRowIndex][1])===false) { /* pass mink to specify */
                     ruleMatches=false;
                     break;
                 }
-        	} else {
-            	if (DoesCellRowMatch(rule.direction,rule.patterns[cellRowIndex],tuple[cellRowIndex])===false) {
+          } else {
+              if (DoesCellRowMatch(rule.direction,rule.patterns[cellRowIndex],tuple[cellRowIndex])===false) {
                     ruleMatches=false;
                     break;
                 }
-        	}
+          }
         }
         if (ruleMatches === false ) {
             return false;
@@ -1973,9 +2265,9 @@ Rule.prototype.applyAt = function(delta,tuple,check) {
             var preCell = preRow[cellIndex];
 
             if (preCell === ellipsisPattern) {
-            	var k = tuple[cellRowIndex][1];
-            	currentIndex = (currentIndex+(d1+d0)*k);
-            	continue;
+              var k = tuple[cellRowIndex][1];
+              currentIndex = (currentIndex+(d1+d0)*k);
+              continue;
             }
 
             result = preCell.replace(rule, currentIndex) || result;
@@ -1984,79 +2276,158 @@ Rule.prototype.applyAt = function(delta,tuple,check) {
         }
     }
 
-	if (verbose_logging && result){
-		var ruleDirection = dirMaskName[rule.direction];
-		if (!rule.directional()){
-			ruleDirection="";
-		}
+  if (verbose_logging && result){
+    var ruleDirection = dirMaskName[rule.direction];
+    if (!rule.directional()){
+      ruleDirection="";
+    }
 
-		var logString = '<font color="green">Rule <a onclick="jumpToLine(' + rule.lineNumber + ');"  href="javascript:void(0);">' + rule.lineNumber + '</a> ' + 
-			ruleDirection + ' applied.</font>';
-		consolePrint(logString);
-	}
+    var logString = '<font color="green">Rule <a onclick="jumpToLine(' + rule.lineNumber + ');"  href="javascript:void(0);">' + rule.lineNumber + '</a> ' + 
+      ruleDirection + ' applied.</font>';
+    consolePrint(logString);
+  }
 
     return result;
 };
 
 Rule.prototype.tryApply = function() {
-	var delta = dirMasksDelta[this.direction];
+  var delta = dirMasksDelta[this.direction];
 
     //get all cellrow matches
     var matches = this.findMatches();
     if (matches.length===0) {
-    	return false;
+      return false;
     }
 
-    var result=false;	
-	if (this.hasReplacements) {
-	    var tuples = generateTuples(matches);
-	    for (var tupleIndex=0;tupleIndex<tuples.length;tupleIndex++) {
-	        var tuple = tuples[tupleIndex];
-	        var shouldCheck=tupleIndex>0;
-	        var success = this.applyAt(delta,tuple,shouldCheck);
-	        result = success || result;
-	    }
-	}
+    var result=false; 
+  if (this.hasReplacements) {
+      var tuples = generateTuples(matches);
+      for (var tupleIndex=0;tupleIndex<tuples.length;tupleIndex++) {
+          var tuple = tuples[tupleIndex];
+          var shouldCheck=tupleIndex>0;
+          var success = this.applyAt(delta,tuple,shouldCheck);
+          result = success || result;
+      }
+  }
 
     if (matches.length>0) {
-    	this.queueCommands();
+      this.queueCommands();
     }
     return result;
 };
 
 Rule.prototype.queueCommands = function() {
-	var commands = this.commands;
-	for(var i=0;i<commands.length;i++) {
-		var command=commands[i];
-		var already=false;
-		if (level.commandQueue.indexOf(command[0])>=0) {
-			continue;
-		}
-		level.commandQueue.push(command[0]);
-		level.commandQueueSourceRules.push(this);
+  var commands = this.commands;
+  for(var i=0;i<commands.length;i++) {
+    var command=commands[i];
+    var already=false;
+    if (level.commandQueue.indexOf(command[0])>=0) {
+      continue;
+    }
+    level.commandQueue.push(command[0]);
+    level.commandQueueSourceRules.push(this);
 
-		if (verbose_logging){
-			var lineNumber = this.lineNumber;
-			var ruleDirection = dirMaskName[this.direction];
-			var logString = '<font color="green">Rule <a onclick="jumpToLine(' + lineNumber.toString() + ');"  href="javascript:void(0);">' + lineNumber.toString() + '</a> triggers command '+command[0]+'.</font>';
-			consolePrint(logString,true);
-		}
+    if (verbose_logging){
+      var lineNumber = this.lineNumber;
+      var ruleDirection = dirMaskName[this.direction];
+      var logString = '<font color="green">Rule <a onclick="jumpToLine(' + lineNumber.toString() + ');"  href="javascript:void(0);">' + lineNumber.toString() + '</a> triggers command '+command[0]+'.</font>';
+      consolePrint(logString,true);
+    }
 
-		if (command[0]==='message') {			
-			messagetext=command[1];
-		}		
-	}
+    if (command[0]==='message') {     
+      messagetext=command[1];
+    }
+	
+    if (command[0]==='goto') {
+      gotoLevel(command[1]);
+    }
+
+    if (state.metadata.runtime_metadata_twiddling !== undefined && twiddleable_params.includes(command[0])) {
+
+      value = command[1];
+
+      if (value == "wipe") {
+        delete state.metadata[command[0]]; //value = undefined;
+        value = null;
+      } else if (value == "default") {
+        value = deepClone(state.default_metadata[command[0]]);
+      }
+
+      if (value != null) {
+        state.metadata[command[0]] = value;
+      }
+      
+      if (command[0] === "zoomscreen" || command[0] === "flickscreen") {
+        twiddleMetaData(state, true);
+        canvasResize();
+      }
+
+      if (command[0] === "smoothscreen") {
+        if (value !== undefined) {
+          twiddleMetaData(state, true);
+          initSmoothCamera()
+        } else {
+          smoothscreen = false;
+        }
+        canvasResize();
+      }
+
+      twiddleMetadataExtras()
+
+      if (state.metadata.runtime_metadata_twiddling_debug !== undefined) {
+        var log = "Metadata twiddled: Flag "+command[0] + " set to " + value;
+        if (value != command[1]) {
+          log += " ("+command[1]+")"
+        }
+        consolePrintFromRule(log,this,true);
+      }
+    }   
+  }
 };
 
+function twiddleMetadataExtras() {
+  if (state.metadata.realtime_interval!==undefined) {
+    autotick=0;
+    autotickinterval=state.metadata.realtime_interval*1000;
+  } else {
+    autotick=0;
+    autotickinterval=0;
+  }
+
+  if (state.metadata.again_interval!==undefined) {
+    againinterval=state.metadata.again_interval*1000;
+  } else {
+    againinterval=150;
+  }
+
+  if (state.metadata.key_repeat_interval!==undefined) {
+    repeatinterval=state.metadata.key_repeat_interval*1000;
+  } else {
+    repeatinterval=150;
+  }
+
+  if ('background_color' in state.metadata) {
+    state.bgcolor=colorToHex(colorPalette,state.metadata.background_color);
+  } else {
+    state.bgcolor="#000000";
+  }
+
+  if ('text_color' in state.metadata) {
+    state.fgcolor=colorToHex(colorPalette,state.metadata.text_color);
+  } else {
+    state.fgcolor="#FFFFFF";
+  }
+}
+
 function showTempMessage() {
-	keybuffer=[];
-	textMode=true;
-	titleScreen=false;
-	quittingMessageScreen=false;
-	messageselected=false;
-	tryPlayShowMessageSound();
-	drawMessageScreen();
-	canvasResize();
+  keybuffer=[];
+  textMode=true;
+  titleScreen=false;
+  quittingMessageScreen=false;
+  messageselected=false;
+  tryPlayShowMessageSound();
+  drawMessageScreen();
+  canvasResize();
 }
 
 function processOutputCommands(commands) {
@@ -2074,61 +2445,61 @@ function processOutputCommands(commands) {
 }
 
 function applyRandomRuleGroup(ruleGroup) {
-	var propagated=false;
+  var propagated=false;
 
-	var matches=[];
-	for (var ruleIndex=0;ruleIndex<ruleGroup.length;ruleIndex++) {
-		var rule=ruleGroup[ruleIndex];
-		var ruleMatches = rule.findMatches();
-		if (ruleMatches.length>0) {
-	    	var tuples  = generateTuples(ruleMatches);
-	    	for (var j=0;j<tuples.length;j++) {
-	    		var tuple=tuples[j];
-				matches.push([ruleIndex,tuple]);
-	    	}
-		}		
-	}
+  var matches=[];
+  for (var ruleIndex=0;ruleIndex<ruleGroup.length;ruleIndex++) {
+    var rule=ruleGroup[ruleIndex];
+    var ruleMatches = rule.findMatches();
+    if (ruleMatches.length>0) {
+        var tuples  = generateTuples(ruleMatches);
+        for (var j=0;j<tuples.length;j++) {
+          var tuple=tuples[j];
+        matches.push([ruleIndex,tuple]);
+        }
+    }   
+  }
 
-	if (matches.length===0)
-	{
-		return false;
-	} 
+  if (matches.length===0)
+  {
+    return false;
+  } 
 
-	var match = matches[Math.floor(RandomGen.uniform()*matches.length)];
-	var ruleIndex=match[0];
-	var rule=ruleGroup[ruleIndex];
-	var delta = dirMasksDelta[rule.direction];
-	var tuple=match[1];
-	var check=false;
-	var modified = rule.applyAt(delta,tuple,check);
+  var match = matches[Math.floor(RandomGen.uniform()*matches.length)];
+  var ruleIndex=match[0];
+  var rule=ruleGroup[ruleIndex];
+  var delta = dirMasksDelta[rule.direction];
+  var tuple=match[1];
+  var check=false;
+  var modified = rule.applyAt(delta,tuple,check);
 
-   	rule.queueCommands();
+    rule.queueCommands();
 
-	return modified;
+  return modified;
 }
 
 function applyRuleGroup(ruleGroup) {
-	if (ruleGroup[0].isRandom) {
-		return applyRandomRuleGroup(ruleGroup);
-	}
+  if (ruleGroup[0].isRandom) {
+    return applyRandomRuleGroup(ruleGroup);
+  }
 
-	var loopPropagated=false;
+  var loopPropagated=false;
     var propagated=true;
     var loopcount=0;
     while(propagated) {
-    	loopcount++;
-    	if (loopcount>200) 
-    	{
-    		logErrorCacheable("Got caught looping lots in a rule group :O",ruleGroup[0].lineNumber,true);
-    		break;
-    	}
+      loopcount++;
+      if (loopcount>200) 
+      {
+        logErrorCacheable("Got caught looping lots in a rule group :O",ruleGroup[0].lineNumber,true);
+        break;
+      }
         propagated=false;
         for (var ruleIndex=0;ruleIndex<ruleGroup.length;ruleIndex++) {
             var rule = ruleGroup[ruleIndex];            
             propagated = rule.tryApply() || propagated;
         }
         if (propagated) {
-        	loopPropagated=true;
+          loopPropagated=true;
         }
     }
 
@@ -2139,39 +2510,41 @@ function applyRules(rules, loopPoint, startRuleGroupindex, bannedGroup){
     //for each rule
     //try to match it
 
+    playerPositions = getPlayerPositions();
+
     //when we're going back in, let's loop, to be sure to be sure
     var loopPropagated = startRuleGroupindex>0;
     var loopCount = 0;
     for (var ruleGroupIndex=startRuleGroupindex;ruleGroupIndex<rules.length;) {
-    	if (bannedGroup && bannedGroup[ruleGroupIndex]) {
-    		//do nothing
-    	} else {
-    		var ruleGroup=rules[ruleGroupIndex];
-			loopPropagated = applyRuleGroup(ruleGroup) || loopPropagated;
-	    }
+      if (bannedGroup && bannedGroup[ruleGroupIndex]) {
+        //do nothing
+      } else {
+        var ruleGroup=rules[ruleGroupIndex];
+      loopPropagated = applyRuleGroup(ruleGroup) || loopPropagated;
+      }
         if (loopPropagated && loopPoint[ruleGroupIndex]!==undefined) {
-        	ruleGroupIndex = loopPoint[ruleGroupIndex];
-        	loopPropagated=false;
-        	loopCount++;
-			if (loopCount > 200) {
-    			var ruleGroup=rules[ruleGroupIndex];
-			   	logErrorCacheable("got caught in an endless startloop...endloop vortex, escaping!", ruleGroup[0].lineNumber,true);
-			   	break;
-			}
+          ruleGroupIndex = loopPoint[ruleGroupIndex];
+          loopPropagated=false;
+          loopCount++;
+      if (loopCount > 200) {
+          var ruleGroup=rules[ruleGroupIndex];
+          logErrorCacheable("got caught in an endless startloop...endloop vortex, escaping!", ruleGroup[0].lineNumber,true);
+          break;
+      }
         } else {
-        	ruleGroupIndex++;
-        	if (ruleGroupIndex===rules.length) {
-        		if (loopPropagated && loopPoint[ruleGroupIndex]!==undefined) {
-		        	ruleGroupIndex = loopPoint[ruleGroupIndex];
-		        	loopPropagated=false;
-		        	loopCount++;
-					if (loopCount > 200) {
-		    			var ruleGroup=rules[ruleGroupIndex];
-					   	logErrorCacheable("got caught in an endless startloop...endloop vortex, escaping!", ruleGroup[0].lineNumber,true);
-					   	break;
-					}
-		        } 
-        	}
+          ruleGroupIndex++;
+          if (ruleGroupIndex===rules.length) {
+            if (loopPropagated && loopPoint[ruleGroupIndex]!==undefined) {
+              ruleGroupIndex = loopPoint[ruleGroupIndex];
+              loopPropagated=false;
+              loopCount++;
+          if (loopCount > 200) {
+              var ruleGroup=rules[ruleGroupIndex];
+              logErrorCacheable("got caught in an endless startloop...endloop vortex, escaping!", ruleGroup[0].lineNumber,true);
+              break;
+          }
+            } 
+          }
         }
     }
 }
@@ -2183,53 +2556,53 @@ function resolveMovements(dir){
     while(moved){
         moved=false;
         for (var i=0;i<level.n_tiles;i++) {
-        	moved = repositionEntitiesAtCell(i) || moved;
+          moved = repositionEntitiesAtCell(i) || moved;
         }
     }
     var doUndo=false;
 
-	for (var i=0;i<level.n_tiles;i++) {
-		var cellMask = level.getCellInto(i,_o6);
-		var movementMask = level.getMovements(i);
-		if (!movementMask.iszero()) {
-			var rigidMovementAppliedMask = level.rigidMovementAppliedMask[i];
-			if (rigidMovementAppliedMask !== 0) {
-				movementMask.iand(rigidMovementAppliedMask);
-				if (!movementMask.iszero()) {
-					//find what layer was restricted
-					for (var j=0;j<level.layerCount;j++) {
-						var layerSection = movementMask.getshiftor(0x1f, 5*j);
-						if (layerSection!==0) {
-							//this is our layer!
-							var rigidGroupIndexMask = level.rigidGroupIndexMask[i];
-							var rigidGroupIndex = rigidGroupIndexMask.getshiftor(0x1f, 5*j);
-							rigidGroupIndex--;//group indices start at zero, but are incremented for storing in the bitfield
-							var groupIndex = state.rigidGroupIndex_to_GroupIndex[rigidGroupIndex];
-							level.bannedGroup[groupIndex]=true;
-							//backtrackTarget = rigidBackups[rigidGroupIndex];
-							doUndo=true;
-							break;
-						}
-					}
-				}
-			}
-			for (var j=0;j<state.sfx_MovementFailureMasks.length;j++) {
-				var o = state.sfx_MovementFailureMasks[j];
-				var objectMask = o.objectMask;
-				if (objectMask.anyBitsInCommon(cellMask)) {
-					var directionMask = o.directionMask;
-					if (movementMask.anyBitsInCommon(directionMask) && seedsToPlay_CantMove.indexOf(o.seed)===-1) {
-						seedsToPlay_CantMove.push(o.seed);
-					}
-				}
-			}
-    	}
+  for (var i=0;i<level.n_tiles;i++) {
+    var cellMask = level.getCellInto(i,_o6);
+    var movementMask = level.getMovements(i);
+    if (!movementMask.iszero()) {
+      var rigidMovementAppliedMask = level.rigidMovementAppliedMask[i];
+      if (rigidMovementAppliedMask !== 0) {
+        movementMask.iand(rigidMovementAppliedMask);
+        if (!movementMask.iszero()) {
+          //find what layer was restricted
+          for (var j=0;j<level.layerCount;j++) {
+            var layerSection = movementMask.getshiftor(0x1f, 5*j);
+            if (layerSection!==0) {
+              //this is our layer!
+              var rigidGroupIndexMask = level.rigidGroupIndexMask[i];
+              var rigidGroupIndex = rigidGroupIndexMask.getshiftor(0x1f, 5*j);
+              rigidGroupIndex--;//group indices start at zero, but are incremented for storing in the bitfield
+              var groupIndex = state.rigidGroupIndex_to_GroupIndex[rigidGroupIndex];
+              level.bannedGroup[groupIndex]=true;
+              //backtrackTarget = rigidBackups[rigidGroupIndex];
+              doUndo=true;
+              break;
+            }
+          }
+        }
+      }
+      for (var j=0;j<state.sfx_MovementFailureMasks.length;j++) {
+        var o = state.sfx_MovementFailureMasks[j];
+        var objectMask = o.objectMask;
+        if (objectMask.anyBitsInCommon(cellMask)) {
+          var directionMask = o.directionMask;
+          if (movementMask.anyBitsInCommon(directionMask) && seedsToPlay_CantMove.indexOf(o.seed)===-1) {
+            seedsToPlay_CantMove.push(o.seed);
+          }
+        }
+      }
+      }
 
-    	for (var j=0;j<STRIDE_MOV;j++) {
-    		level.movements[j+i*STRIDE_MOV]=0;
-    	}
-	    level.rigidGroupIndexMask[i]=0;
-	    level.rigidMovementAppliedMask[i]=0;
+      for (var j=0;j<STRIDE_MOV;j++) {
+        level.movements[j+i*STRIDE_MOV]=0;
+      }
+      level.rigidGroupIndexMask[i]=0;
+      level.rigidMovementAppliedMask[i]=0;
     }
     return doUndo;
 }
@@ -2238,33 +2611,36 @@ var sfxCreateMask=null;
 var sfxDestroyMask=null;
 
 function calculateRowColMasks() {
-	for(var i=0;i<level.mapCellContents.length;i++) {
-		level.mapCellContents[i]=0;
-	}
+  for(var i=0;i<level.mapCellContents.length;i++) {
+    level.mapCellContents[i]=0;
+  }
 
-	for (var i=0;i<level.width;i++) {
-		var ccc = level.colCellContents[i];
-		ccc.setZero();
-	}
+  for (var i=0;i<level.width;i++) {
+    var ccc = level.colCellContents[i];
+    ccc.setZero();
+  }
 
-	for (var i=0;i<level.height;i++) {
-		var rcc = level.rowCellContents[i];
-		rcc.setZero();
-	}
+  for (var i=0;i<level.height;i++) {
+    var rcc = level.rowCellContents[i];
+    rcc.setZero();
+  }
 
-	for (var i=0;i<level.width;i++) {
-		for (var j=0;j<level.height;j++) {
-			var index = j+i*level.height;
-			var cellContents=level.getCellInto(index,_o9);
-			level.mapCellContents.ior(cellContents);
-			level.rowCellContents[j].ior(cellContents);
-			level.colCellContents[i].ior(cellContents);
-		}
-	}
+  for (var i=0;i<level.width;i++) {
+    for (var j=0;j<level.height;j++) {
+      var index = j+i*level.height;
+      var cellContents=level.getCellInto(index,_o9);
+      level.mapCellContents.ior(cellContents);
+      level.rowCellContents[j].ior(cellContents);
+      level.colCellContents[i].ior(cellContents);
+    }
+  }
 }
 
+var playerPositions;
+var playerPositionsAtTurnStart;
+
 /* returns a bool indicating if anything changed */
-function processInput(dir,dontDoWin,dontModify) {
+function processInput(dir,dontDoWin,dontModify,bak) {
 	againing = false;
 
 	if (verbose_logging) { 
@@ -2272,15 +2648,19 @@ function processInput(dir,dontDoWin,dontModify) {
 	 		consolePrint('Turn starts with no input.')
 	 	} else {
 	 		consolePrint('=======================');
-			consolePrint('Turn starts with input of ' + ['up','left','down','right','action'][dir]+'.');
+			consolePrint('Turn starts with input of ' + ['up','left','down','right','action','mouse'][dir]+'.');
 	 	}
 	}
 
-	var bak = backupLevel();
+	if (bak==undefined) {
+		bak = backupLevel();
+  }
+  
+  playerPositions= getPlayerPositions();
+playerPositionsAtTurnStart = getPlayerPositions();
 
-	var playerPositions=[];
-    if (dir<=4) {
-    	if (dir>=0) {
+    if (dir<=5) {
+    	if (dir>=0 && dir<=4) {
 	        switch(dir){
 	            case 0://up
 	            {
@@ -2306,10 +2686,10 @@ function processInput(dir,dontDoWin,dontModify) {
 	            {
 	                dir=parseInt('10000', 2);;
 	                break;
-	            }
+				      }
 	        }
 	        playerPositions = startMovement(dir);
-		}
+		    }
 
         var i=0;
         level.bannedGroup = [];
@@ -2319,13 +2699,13 @@ function processInput(dir,dontDoWin,dontModify) {
         var startRuleGroupIndex=0;
         var rigidloop=false;
         var startState = commitPreservationState();
-	    sfxCreateMask.setZero();
-	    sfxDestroyMask.setZero();
+      sfxCreateMask.setZero();
+      sfxDestroyMask.setZero();
 
-		seedsToPlay_CanMove=[];
-		seedsToPlay_CantMove=[];
+    seedsToPlay_CanMove=[];
+    seedsToPlay_CantMove=[];
 
-		calculateRowColMasks();
+    calculateRowColMasks();
 
         do {
         //not particularly elegant, but it'll do for now - should copy the world state and check
@@ -2347,10 +2727,17 @@ function processInput(dir,dontDoWin,dontModify) {
         		applyRules(state.lateRules, state.lateLoopPoint, 0);
         		startRuleGroupIndex=0;
         	}
-        } while (i < 50 && rigidloop);
+        } while (i < 250 && rigidloop);
 
-        if (i>=50) {
-            consolePrint("looped through 50 times, gave up.  too many loops!");
+        if (i>=250) {
+          consolePrint("looped through 250 times, gave up. Too many loops!");
+          
+          applyRules(state.lateRules, state.lateLoopPoint, 0);
+          startRuleGroupIndex=0;
+          
+          backups.push(bak);
+          DoUndo(true,false);
+          return false;
         }
 
 
@@ -2375,6 +2762,17 @@ function processInput(dir,dontDoWin,dontModify) {
         	}
         	//play player cantmove sounds here
         }
+		
+		/// Taken from zarawesome, thank you :)
+	    if (level.commandQueue.indexOf('undo')>=0) {
+	    	if (verbose_logging) {
+	    		consoleCacheDump();
+	    		consolePrint('UNDO command executed, undoing turn.',true);
+			}
+			messagetext = "";
+    		DoUndo(true,false);
+    		return true;
+		}
 
 
 
@@ -2403,11 +2801,36 @@ function processInput(dir,dontDoWin,dontModify) {
 			messagetext = "";
 	    	DoRestart(true);
     		return true;
-	    } 
+		}
+		
+		if (level.commandQueue.indexOf('quit')>=0) {
+			if (verbose_logging) { 
+				var r = level.commandQueueSourceRules[level.commandQueue.indexOf('restart')];
+				consolePrintFromRule('QUIT command executed, exiting level.',r);
+				consoleCacheDump();
+			}
+			if (state.metadata.level_select !== undefined) {
+				gotoLevelSelectScreen();
+			} else {
+				goToTitleScreen();
+			}
+			messagetext = "";
+			canvasResize();	
+			return true;
+		}
 
 	    if (dontModify && level.commandQueue.indexOf('win')>=0) {
 	    	return true;
-	    }
+		}
+		
+		var save_backup = true;
+		if(!winning && level.commandQueue.indexOf('nosave')>=0) {
+			if (verbose_logging) { 
+				var r = level.commandQueueSourceRules[level.commandQueue.indexOf('nosave')];
+				consolePrintFromRule('NOSAVE command executed, not storing current state to undo queue.',r);
+			}
+			save_backup = false;
+		}
 	    
         var modified=false;
 	    for (var i=0;i<level.objects.length;i++) {
@@ -2420,10 +2843,11 @@ function processInput(dir,dontDoWin,dontModify) {
 	        		DoUndo(true,false);
 					return true;
 				} else {
-					if (dir!==-1) {
+					if (dir!==-1 && save_backup) {
 	    				backups.push(bak);
 	    			}
 	    			modified=true;
+	    			updateCameraPositionTarget();
 	    		}
 	    		break;
 	    	}
@@ -2437,25 +2861,25 @@ function processInput(dir,dontDoWin,dontModify) {
 		}
 
         for (var i=0;i<seedsToPlay_CantMove.length;i++) {
-	        	playSound(seedsToPlay_CantMove[i]);
+            playSound(seedsToPlay_CantMove[i]);
         }
 
         for (var i=0;i<seedsToPlay_CanMove.length;i++) {
-	        	playSound(seedsToPlay_CanMove[i]);
+            playSound(seedsToPlay_CanMove[i]);
         }
 
         for (var i=0;i<state.sfx_CreationMasks.length;i++) {
-        	var entry = state.sfx_CreationMasks[i];
-        	if (sfxCreateMask.anyBitsInCommon(entry.objectMask)) {
-	        	playSound(entry.seed);
-        	}
+          var entry = state.sfx_CreationMasks[i];
+          if (sfxCreateMask.anyBitsInCommon(entry.objectMask)) {
+            playSound(entry.seed);
+          }
         }
 
         for (var i=0;i<state.sfx_DestructionMasks.length;i++) {
-        	var entry = state.sfx_DestructionMasks[i];
-        	if (sfxDestroyMask.anyBitsInCommon(entry.objectMask)) {
-	        	playSound(entry.seed);
-        	}
+          var entry = state.sfx_DestructionMasks[i];
+          if (sfxDestroyMask.anyBitsInCommon(entry.objectMask)) {
+            playSound(entry.seed);
+          }
         }
 
 	    processOutputCommands(level.commandQueue);
@@ -2512,128 +2936,127 @@ function processInput(dir,dontDoWin,dontModify) {
 		}
 		    
 
-	    level.commandQueue=[];
-	    level.commandQueueSourceRules=[];
+      level.commandQueue=[];
+      level.commandQueueSourceRules=[];
 
     }
 
-	if (verbose_logging) {
-		consoleCacheDump();
-	}
+  if (verbose_logging) {
+    consoleCacheDump();
+  }
 
-	if (winning) {
-		againing=false;
-	}
+  if (winning) {
+    againing=false;
+  }
 
-	return modified;
+  return modified;
 }
 
 function checkWin(dontDoWin) {
 
-	if (levelEditorOpened) {
-		dontDoWin=true;
-	}
+  if (levelEditorOpened) {
+    dontDoWin=true;
+  }
 
-	if (level.commandQueue.indexOf('win')>=0) {
-		consolePrint("Win Condition Satisfied");
-		if(!dontDoWin){
-			DoWin();
-		}
-		return;
-	}
+  if (level.commandQueue.indexOf('win')>=0) {
+    consolePrint("Win Condition Satisfied");
+    if(!dontDoWin){
+      DoWin();
+    }
+    return;
+  }
 
-	var won= false;
-	if (state.winconditions.length>0)  {
-		var passed=true;
-		for (var wcIndex=0;wcIndex<state.winconditions.length;wcIndex++) {
-			var wincondition = state.winconditions[wcIndex];
-			var filter1 = wincondition[1];
-			var filter2 = wincondition[2];
-			var rulePassed=true;
-			switch(wincondition[0]) {
-				case -1://NO
-				{
-					for (var i=0;i<level.n_tiles;i++) {
-						var cell = level.getCellInto(i,_o10);
-						if ( (!filter1.bitsClearInArray(cell.data)) &&  
-							 (!filter2.bitsClearInArray(cell.data)) ) {
-							rulePassed=false;
-							break;
-						}
-					}
+  var won= false;
+  if (state.winconditions.length>0)  {
+    var passed=true;
+    for (var wcIndex=0;wcIndex<state.winconditions.length;wcIndex++) {
+      var wincondition = state.winconditions[wcIndex];
+      var filter1 = wincondition[1];
+      var filter2 = wincondition[2];
+      var rulePassed=true;
+      switch(wincondition[0]) {
+        case -1://NO
+        {
+          for (var i=0;i<level.n_tiles;i++) {
+            var cell = level.getCellInto(i,_o10);
+            if ( (!filter1.bitsClearInArray(cell.data)) &&  
+               (!filter2.bitsClearInArray(cell.data)) ) {
+              rulePassed=false;
+              break;
+            }
+          }
 
-					break;
-				}
-				case 0://SOME
-				{
-					var passedTest=false;
-					for (var i=0;i<level.n_tiles;i++) {
-						var cell = level.getCellInto(i,_o10);
-						if ( (!filter1.bitsClearInArray(cell.data)) &&  
-							 (!filter2.bitsClearInArray(cell.data)) ) {
-							passedTest=true;
-							break;
-						}
-					}
-					if (passedTest===false) {
-						rulePassed=false;
-					}
-					break;
-				}
-				case 1://ALL
-				{
-					for (var i=0;i<level.n_tiles;i++) {
-						var cell = level.getCellInto(i,_o10);
-						if ( (!filter1.bitsClearInArray(cell.data)) &&  
-							 (filter2.bitsClearInArray(cell.data)) ) {
-							rulePassed=false;
-							break;
-						}
-					}
-					break;
-				}
-			}
-			if (rulePassed===false) {
-				passed=false;
-			}
-		}
-		won=passed;
-	}
+          break;
+        }
+        case 0://SOME
+        {
+          var passedTest=false;
+          for (var i=0;i<level.n_tiles;i++) {
+            var cell = level.getCellInto(i,_o10);
+            if ( (!filter1.bitsClearInArray(cell.data)) &&  
+               (!filter2.bitsClearInArray(cell.data)) ) {
+              passedTest=true;
+              break;
+            }
+          }
+          if (passedTest===false) {
+            rulePassed=false;
+          }
+          break;
+        }
+        case 1://ALL
+        {
+          for (var i=0;i<level.n_tiles;i++) {
+            var cell = level.getCellInto(i,_o10);
+            if ( (!filter1.bitsClearInArray(cell.data)) &&  
+               (filter2.bitsClearInArray(cell.data)) ) {
+              rulePassed=false;
+              break;
+            }
+          }
+          break;
+        }
+      }
+      if (rulePassed===false) {
+        passed=false;
+      }
+    }
+    won=passed;
+  }
 
-	if (won) {
-		consolePrint("Win Condition Satisfied");
-		if (!dontDoWin){
-			DoWin();
-		}
-	}
+  if (won) {
+    consolePrint("Win Condition Satisfied");
+    if (!dontDoWin){
+      DoWin();
+    }
+  }
 }
 
 function DoWin() {
-	if (winning) {
-		return;
-	}
-	againing=false;
-	tryPlayEndLevelSound();
-	if (unitTesting) {
-		nextLevel();
-		return;
-	}
+  if (winning) {
+    return;
+  }
+  againing=false;
+  tryPlayEndLevelSound();
+  if (unitTesting) {
+    nextLevel();
+    return;
+  }
 
-	winning=true;
-	timer=0;
+  winning=true;
+  timer=0;
 }
 
 /*
 //this function isn't valid after refactoring, but also isn't used.
-function anyMovements() {	
+function anyMovements() { 
     for (var i=0;i<level.movementMask.length;i++) {
         if (level.movementMask[i]!==0) {
-        	return true;
+          return true;
         }
     }
     return false;
 }*/
-
 
 function nextLevel() {
     againing=false;
@@ -2642,53 +3065,117 @@ function nextLevel() {
 		curlevel=state.levels.length-1;
 	}
 	
-	if (titleScreen) {
-		if (titleSelection===0) {
-			//new game
+	if (titleScreen && titleMode <= 1) {
+		if(isContinueOptionSelected()) {
+			// continue
+			loadLevelFromStateOrTarget();
+		} else if(isNewGameOptionSelected()) {
+			// new game
 			curlevel=0;
 			curlevelTarget=null;
-		} 			
-		if (curlevelTarget!==null){			
-			loadLevelFromStateTarget(state,curlevel,curlevelTarget);
+
+			if (state.metadata.level_select === undefined) {
+				clearLocalStorage();
+			}
+
+			loadLevelFromStateOrTarget();
+		} else if(isLevelSelectOptionSelected()) {
+			// level select
+			titleSelection = 0;
+			gotoLevelSelectScreen();
 		} else {
-			loadLevelFromState(state,curlevel);
+			// settings
+			// TODO
 		}
-	} else {	
+	} else {
 		if (hasUsedCheckpoint){
 			curlevelTarget=null;
 			hasUsedCheckpoint=false;
 		}
-		if (curlevel<(state.levels.length-1))
-		{			
-			curlevel++;
-			textMode=false;
-			titleScreen=false;
-			quittingMessageScreen=false;
-			messageselected=false;
 
-			if (curlevelTarget!==null){			
-				loadLevelFromStateTarget(state,curlevel,curlevelTarget);
-			} else {
-				loadLevelFromState(state,curlevel);
+		if (curlevel<(state.levels.length-1)) {
+			var skip = false;
+			var curSection = state.levels[Number(curlevel)].section;
+			var nextSection = state.levels[Number(curlevel)+1].section;
+			if(nextSection != curSection) {
+				setSectionSolved(state.levels[Number(curlevel)].section);
+				
+				if(solvedSections.length == state.sections.length && state.winSection != undefined) {
+					curlevel = state.winSection.firstLevel - 1; // it's gonna be increased to match few lines below
+				} else if (nextSection == "__WIN__") {
+					gotoLevelSelectScreen();
+					skip = true;
+				}		
+			}
+
+			if(!skip) {
+				curlevel++;
+				textMode=false;
+				titleScreen=false;
+				quittingMessageScreen=false;
+				messageselected=false;
+	
+				loadLevelFromStateOrTarget();
 			}
 		} else {
-			try{
-				if (!!window.localStorage) {
-	
-					localStorage.removeItem(document.URL);
-					localStorage.removeItem(document.URL+'_checkpoint');
-				}
-			} catch(ex){
+			if(solvedSections.length == state.sections.length) {
+				if(state.metadata["level_select"] === undefined) {
+					// solved all
+					clearLocalStorage();
 					
+					curlevel=0;
+					curlevelTarget=null;
+					goToTitleScreen();
+				} else {
+					gotoLevelSelectScreen();
+				}
+				
+				tryPlayEndGameSound();	
+			} else {
+				if(state.levels[Number(curlevel)].section != null) {
+					setSectionSolved(state.levels[Number(curlevel)].section);
+				}
+				gotoLevelSelectScreen();
 			}
-			
-			curlevel=0;
-			curlevelTarget=null;
-			goToTitleScreen();
-			tryPlayEndGameSound();
 		}		
 		//continue existing game
 	}
+
+	updateLocalStorage();
+	resetFlickDat();
+	canvasResize();	
+	clearInputHistory();
+}
+
+function loadLevelFromStateOrTarget() {
+	if (curlevelTarget!==null){			
+		loadLevelFromStateTarget(state,curlevel,curlevelTarget);
+	} else {
+		loadLevelFromState(state,curlevel);
+	}
+}
+
+function goToTitleScreen(){
+    againing=false;
+	messagetext="";
+	titleScreen=true;
+	textMode=true;
+	doSetupTitleScreenLevelContinue();
+  //titleSelection=(curlevel>0||curlevelTarget!==null)?1:0;
+  
+  state.metadata = deepClone(state.default_metadata);
+  twiddleMetadataExtras();
+
+	generateTitleScreen();
+}
+
+function resetFlickDat() {
+	if (state!==undefined && state.metadata.flickscreen!==undefined){
+		oldflickscreendat=[0,0,Math.min(state.metadata.flickscreen[0],level.width),Math.min(state.metadata.flickscreen[1],level.height)];
+	}
+}
+
+function updateLocalStorage() {
 	try {
 		if (!!window.localStorage) {
 			localStorage[document.URL]=curlevel;
@@ -2698,27 +3185,42 @@ function nextLevel() {
 				localStorage[document.URL+'_checkpoint']=backupStr;
 			} else {
 				localStorage.removeItem(document.URL+"_checkpoint");
-			}		
+			}
 		}
-	} catch (ex) {
-
-	}
-
-	if (state!==undefined && state.metadata.flickscreen!==undefined){
-		oldflickscreendat=[0,0,Math.min(state.metadata.flickscreen[0],level.width),Math.min(state.metadata.flickscreen[1],level.height)];
-	}
-	canvasResize();	
-	clearInputHistory();
+	} catch (ex) { }
 }
 
-function goToTitleScreen(){
-    againing=false;
-	messagetext="";
-	titleScreen=true;
-	textMode=true;
-	doSetupTitleScreenLevelContinue();
-	titleSelection=(curlevel>0||curlevelTarget!==null)?1:0;
-	generateTitleScreen();
+function setSectionSolved(section) {
+	if(section == null || section == undefined) {
+		return;
+	}
+
+	if(section.name == "__WIN__") {
+		return;
+	}
+
+	if(solvedSections.indexOf(section) >= 0) {
+		return;
+	}
+
+	try {
+		if(!!window.localStorage) {
+			solvedSections.push(section);
+			localStorage.setItem(document.URL + "_sections", JSON.stringify(solvedSections));
+		}
+	} catch(ex) { }
 }
 
+function clearLocalStorage() {
+	curlevel = 0;
+	curlevelTarget = null;
+	solvedSections = [];
 
+	try {
+		if (!!window.localStorage) {
+			localStorage.removeItem(document.URL);
+			localStorage.removeItem(document.URL+'_checkpoint');
+			localStorage.removeItem(document.URL+'_sections');
+		}
+	} catch(ex){ }
+}

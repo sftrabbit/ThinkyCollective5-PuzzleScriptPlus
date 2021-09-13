@@ -35,7 +35,28 @@
             ["title", "My Amazing Puzzle Game", "The name of your game. Appears on the title screen."],
             ["throttle_movement", "", "For use in conjunction with realtime_interval - this stops you from moving crazy fast - repeated keypresses of the same movement direction will not increase your speed. This doesn't apply to the action button."],
             ["verbose_logging", "", "As you play the game, spits out information about all rules applied as you play"],
-            ["zoomscreen", "WxH", "Zooms the camera in to a WxH section of the map around the player, centered on the player."]
+            ["zoomscreen", "WxH", "Zooms the camera in to a WxH section of the map around the player, centered on the player."],
+            ["mouse_left","lmb","Sets the object to place when pressing left mouse button."],
+            ["mouse_drag","drag","Sets the object to place when moving the mouse while left mouse button is held."],
+            ["mouse_up","lmbup","Sets the object to place when left mouse button is released."],
+            ["mouse_right","rmb","Sets the object to place when pressing right mouse button."],
+            ["mouse_rdrag","rdrag","Sets the object to place when moving the mouse while right mouse button is held."],
+            ["mouse_rup","rmbup","Sets the object to place when right mouse button is released."],
+            ["nokeyboard","","Allows the game to run without a Player object and movement."],
+            ["smoothscreen", "[flick] WxH [IxJ] [S]", "Zooms the camera in to a WxH section of the map around the player and smoothly scrolls to follow the player. The optional argument IxJ (default: 1x1) specifies a boundary in which the player can move without moving the camera. The optional speed argument (default: 0.125) specifies how far the camera will move towards the player each frame as a fraction of the distance to the player. The optional flick keyword makes the camera move like flickscreen."],
+            ["smoothscreen_debug", "", "Draw smoothscreen debug information."],
+            ["sprite_size", "5", "Size of sprites."],
+            ["case_sensitive", "", "Makes object names and legend case sensitive."],
+            ["level_select", "", "Show level selection option on main screen (use with sections in levels)."],
+            ["continue_is_level_select", "", "Don't show separate option on main menu for level selection."],
+            ["level_select_lock", "", "Level selection will have unsolved levels locked."],
+            ["level_select_unlocked_ahead", "1", "Level selection will have N number of unsolved levels unlocked after last solved level."],
+            ["level_select_solve_symbol", "x", "Symbol that will be used for solved levels in level select menu"],
+            ["custom_font", "", "Custom font to use for text rendering."],
+            ["font_size", "", "Controls the size of the custom_font"], 
+            ["local_radius", "X", "Radius around the player to execute rules in"],
+            ["runtime_metadata_twiddling", "", "Allows you to change some prelude flags during runtime using rules"],
+            ["runtime_metadata_twiddling_debug", "", "Prints in the console each time the metadata is twiddled"],
         ];
 
         var COLOR_WORDS = [
@@ -43,7 +64,8 @@
             "black", "white", "darkgray", "lightgray", "gray", "red", "darkred", "lightred", "brown", "darkbrown", "lightbrown", "orange", "yellow", "green", "darkgreen", "lightgreen", "blue", "lightblue", "darkblue", "purple", "pink", "transparent"];
         var RULE_COMMAND_WORDS = [
             "COMMAND",
-            "sfx0", "sfx1", "sfx2", "sfx3", "sfx4", "sfx5", "sfx6", "sfx7", "sfx8", "sfx9", "sfx10", "cancel", "checkpoint", "restart", "win", "message", "again"];
+            "sfx0", "sfx1", "sfx2", "sfx3", "sfx4", "sfx5", "sfx6", "sfx7", "sfx8", "sfx9", "sfx10", "cancel", "checkpoint", "restart", "win", "message", "again", "nosave", "quit",
+            "global", "zoomscreen", "flickscreen", "smoothscreen", "key_repeat_interval", "again_interval", "realtime_interval", "background_color", "text_color", "noundo", "norestart", "goto"];
 
         var CARDINAL_DIRECTION_WORDS = [
             "DIRECTION",
@@ -207,6 +229,8 @@
                     {
                         if (lineToCursor.trim().split(/\s+/ ).length<2) {
                             candlists.push(["MESSAGE_VERB","message"]);
+                            candlists.push(["SECTION_VERB","section"]);
+                            candlists.push(["GOTO_VERB"   ,"goto"   ]);
                         }
                         break;
                     }
