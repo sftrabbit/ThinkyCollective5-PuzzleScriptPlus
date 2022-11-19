@@ -120,8 +120,6 @@ new Inliner('./src/standalone.html', function (error, html) {
             fs.rmdirSync("./bin/css", { recursive: true });
             fs.mkdirSync('./bin/css');
             fs.rmdirSync("./bin/tests", { recursive: true });
-            fs.rmdirSync("./bin/Levels", { recursive: true });
-
             console.log('compressing css');
 
 
